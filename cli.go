@@ -30,6 +30,11 @@ func configureCli() (app *cli.App) {
 			EnvVar: "PORT",
 			Value:  4444,
 		},
+		cli.StringFlag{
+			Name:  "kafka-brokers, kb",
+			Usage: "Comma separated list of kafka brokers",
+			Value: "127.0.0.1:9092",
+		},
 	}
 	return
 }
@@ -42,6 +47,7 @@ func defaultAction(c *cli.Context) {
 	} else {
 		command = c.String("cmd")
 		address := fmt.Sprintf(":%d", c.Int("port"))
-		run(module, command, address)
+		brokers := c.String("kafka-brokers")
+		run(module, command, address, brokers)
 	}
 }

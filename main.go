@@ -29,7 +29,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func run(moduleName, cmd, address string) {
+func run(moduleName, cmd, address, kafkaBrokers string) {
 	if !shared.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
