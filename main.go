@@ -12,6 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	pbm "github.com/larskluge/babl/protobuf/messages"
+	"github.com/larskluge/babl/shared"
 	"github.com/nneves/kafka-tools/bkconsumer"
 	"github.com/nneves/kafka-tools/bkproducer"
 )
@@ -24,8 +25,21 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetFormatter(&log.JSONFormatter{})
 
+	app := configureCli()
+	app.Run(os.Args)
+}
+
+func run(moduleName, cmd, address string) {
+	if !shared.CheckModuleName(moduleName) {
+		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
+	}
+	log.Warn("Start module")
+	command = cmd
+	module := shared.NewModule(moduleName, false)
+	topic := module.KafkaTopicName("IO")
+
 	for {
-		key, value := bkconsumer.Consumer("larskluge.image-resize")
+		key, value := bkconsumer.Consumer(topic)
 		in := &pbm.BinRequest{}
 		err := proto.Unmarshal(value, in)
 		check(err)
@@ -33,15 +47,14 @@ func main() {
 		check(err)
 		msg, err := proto.Marshal(out)
 		check(err)
-		topic := "inbox." + key
-		bkproducer.Producer(key, topic, msg)
+		inboxTopic := "inbox." + key
+		bkproducer.Producer(key, inboxTopic, msg)
 	}
 }
 
 func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 	start := time.Now()
 
-	command = "/bin/cat"
 	cmd := exec.Command(command)
 	env := os.Environ()
 	cmd.Env = []string{} // {"FOO=BAR"}
