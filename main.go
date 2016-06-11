@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
@@ -33,6 +34,7 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 	command = cmd
 	module := shared.NewModule(moduleName, false)
 
+	go registerModule(moduleName)
 	go work(module.KafkaTopicName("IO"))
 	go work(module.KafkaTopicName("Ping"))
 
@@ -52,6 +54,11 @@ func work(topic string) {
 	check(err)
 	inboxTopic := "inbox." + key
 	bkproducer.Producer(key, inboxTopic, msg)
+}
+
+func registerModule(mod string) {
+	now := time.Now().UTC().String()
+	bkproducer.Producer(mod, "modules", []byte(now))
 }
 
 func check(err error) {
