@@ -44,16 +44,19 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 }
 
 func work(topic string) {
-	key, value := bkconsumer.Consumer(topic)
-	in := &pbm.BinRequest{}
-	err := proto.Unmarshal(value, in)
-	check(err)
-	out, err := IO(in)
-	check(err)
-	msg, err := proto.Marshal(out)
-	check(err)
-	inboxTopic := "inbox." + key
-	bkproducer.Producer(key, inboxTopic, msg)
+	for {
+		log.Infof("Work on topic %s", topic)
+		key, value := bkconsumer.Consumer(topic)
+		in := &pbm.BinRequest{}
+		err := proto.Unmarshal(value, in)
+		check(err)
+		out, err := IO(in)
+		check(err)
+		msg, err := proto.Marshal(out)
+		check(err)
+		inboxTopic := "inbox." + key
+		bkproducer.Producer(key, inboxTopic, msg)
+	}
 }
 
 func registerModule(mod string) {
