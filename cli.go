@@ -39,7 +39,7 @@ func configureCli() (app *cli.App) {
 	return
 }
 
-func defaultAction(c *cli.Context) {
+func defaultAction(c *cli.Context) error {
 	module := c.String("module")
 	if module == "" {
 		cli.ShowAppHelp(c)
@@ -50,4 +50,5 @@ func defaultAction(c *cli.Context) {
 		brokers := c.String("kafka-brokers")
 		run(module, command, address, brokers)
 	}
+	return nil
 }
