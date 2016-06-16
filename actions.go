@@ -13,6 +13,7 @@ import (
 	pbm "github.com/larskluge/babl/protobuf/messages"
 )
 
+// IO actions IO()
 func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 	start := time.Now()
 
