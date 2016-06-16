@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -109,12 +108,9 @@ func consumerInit(reqTopic string) {
 	}
 	initialized = true
 
-	randNbr := uint32(random(1, 999999))
-	randStr := strconv.FormatUint(uint64(randNbr), 10)
-
 	// sarama/bsm config
 	config := cluster.NewConfig()
-	config.ClientID = "bkconsumergroups-" + randStr
+	config.ClientID = "consumergroups-" + getRandomID()
 	logger.Printf("ClientID: %s\n", config.ClientID)
 
 	if verbose {
