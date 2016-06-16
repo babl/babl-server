@@ -18,37 +18,48 @@ type ProducerOptions struct {
 }
 
 var (
-	options ProducerOptions
-	message sarama.ProducerMessage
-	logger  = log.New(os.Stderr, "", log.LstdFlags)
+	defaults ProducerOptions
+	message  sarama.ProducerMessage
+	logger   = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func init() {
-	options.Brokers = "localhost:9092"
-	options.Partition = 0
-	options.Verbose = false
+	defaults.Brokers = "localhost:9092"
+	defaults.Partition = 0
+	defaults.Verbose = false
+}
+
+func getCustomOptions(op ProducerOptions) ProducerOptions {
+	result := ProducerOptions{}
+	result = defaults
+	if len(op.Brokers) > 0 {
+		result.Brokers = op.Brokers
+	}
+	if op.Partition >= 0 {
+		result.Partition = op.Partition
+	}
+	result.Verbose = op.Verbose
+	return result
 }
 
 // Producer Kafka Sarama Producer
 func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...interface{}) {
-	// setting optional parameter 'args ...interfaces'
+	// get options from args if configured, else get defaults (check each property)
+	options := ProducerOptions{}
+	options = defaults
 	if len(args) > 0 {
-		customOptions, ok := args[0].(ProducerOptions)
+		op, ok := args[0].(ProducerOptions)
 		if ok {
-			if len(customOptions.Brokers) > 0 {
-				options.Brokers = customOptions.Brokers
-			}
-			if customOptions.Partition >= 0 {
-				options.Partition = customOptions.Partition
-			}
-			options.Verbose = customOptions.Verbose
+			options = getCustomOptions(op)
 		}
 	}
-	//fmt.Println("Producer: options = ", options)
+	logger.Println("Producer: options=", options)
 
 	// set logger options
 	if !options.Verbose {
 		logger.SetOutput(ioutil.Discard)
+	} else {
+		logger.SetOutput(os.Stderr)
 	}
 	sarama.Logger = logger
 
@@ -58,6 +69,8 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.ClientID = "producer-" + getRandomID()
+	logger.Printf("Producer: ClientID: %s\n", config.ClientID)
 
 	config.Producer.Partitioner = sarama.NewManualPartitioner
 	message := &sarama.ProducerMessage{Topic: prodTopic, Partition: options.Partition}

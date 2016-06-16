@@ -55,21 +55,23 @@ func work(topics []string) {
 		msg, err := proto.Marshal(out)
 		check(err)
 		inboxTopic := "inbox." + key
-		bablkafka.Producer(key, inboxTopic, msg, bablkafka.ProducerOptions{
-			Brokers:   "localhost:9092",
-			Partition: 0,
-			Verbose:   false,
-		})
+		bablkafka.Producer(key, inboxTopic, msg)
+		// bablkafka.Producer(key, inboxTopic, msg, bablkafka.ProducerOptions{
+		// 	Brokers:   "localhost:9092",
+		// 	Partition: 0,
+		// 	Verbose:   true,
+		// })
 	}
 }
 
 func registerModule(mod string) {
 	now := time.Now().UTC().String()
-	bablkafka.Producer(mod, "modules", []byte(now), bablkafka.ProducerOptions{
-		Brokers:   "localhost:9092",
-		Partition: 0,
-		Verbose:   false,
-	})
+	bablkafka.Producer(mod, "modules", []byte(now))
+	// bablkafka.Producer(mod, "modules", []byte(now), bablkafka.ProducerOptions{
+	// 	Brokers:   "localhost:9092",
+	// 	Partition: 0,
+	// 	Verbose:   true,
+	// })
 }
 
 func check(err error) {
