@@ -86,24 +86,26 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 
 	producer, err := sarama.NewSyncProducer(strings.Split(options.Brokers, ","), config)
 	if err != nil {
-		printErrorAndExit(69, "Producer: Failed to open Kafka producer: %s", err)
+		printError(69, "Producer: Failed to open Kafka producer: %s", err)
+		panic(err)
 	}
 	defer func() {
 		if errX := producer.Close(); err != nil {
 			logger.Println("Producer: Failed to close Kafka producer cleanly:", errX)
+			panic(errX)
 		}
 	}()
 
 	partition, offset, err := producer.SendMessage(message)
 	if err != nil {
-		printErrorAndExit(69, "Producer: Failed to produce message: %s", err)
+		printError(69, "Producer: Failed to produce message: %s", err)
+		panic(err)
 	} else if options.Verbose {
 		logger.Printf("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d\n", prodTopic, partition, offset)
 	}
 }
 
-func printErrorAndExit(code int, format string, values ...interface{}) {
+func printError(code int, format string, values ...interface{}) {
 	fmt.Fprintf(os.Stderr, "Producer: ERROR: %s\n", fmt.Sprintf(format, values...))
 	fmt.Fprintln(os.Stderr)
-	//os.Exit(code)
 }
