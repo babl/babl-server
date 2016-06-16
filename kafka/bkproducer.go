@@ -1,7 +1,6 @@
 package bablkafka
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -103,9 +102,4 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 	} else if options.Verbose {
 		producerLogger.Printf("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d\n", prodTopic, partition, offset)
 	}
-}
-
-func printError(code int, format string, values ...interface{}) {
-	fmt.Fprintf(os.Stderr, "Producer: ERROR: %s\n", fmt.Sprintf(format, values...))
-	fmt.Fprintln(os.Stderr)
 }

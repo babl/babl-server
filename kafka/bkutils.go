@@ -1,7 +1,9 @@
 package bablkafka
 
 import (
+	"fmt"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 )
@@ -15,4 +17,9 @@ func getRandomID() string {
 func random(min, max int) int {
 	rand.Seed(time.Now().Unix())
 	return rand.Intn(max-min) + min
+}
+
+func printError(code int, format string, values ...interface{}) {
+	fmt.Fprintf(os.Stderr, "Producer: ERROR: %s\n", fmt.Sprintf(format, values...))
+	fmt.Fprintln(os.Stderr)
 }

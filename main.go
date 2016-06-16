@@ -12,7 +12,6 @@ import (
 	"github.com/larskluge/babl-server-kafka/kafka"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 	"github.com/larskluge/babl/shared"
-	"github.com/nneves/kafka-tools/bkconsumergroups"
 )
 
 type server struct{}
@@ -41,12 +40,13 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	<-wait
+	bablkafka.ConsumerGroupsClose()
 }
 
 func work(topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
-		key, value := bkconsumergroups.ConsumerGroups(strings.Join(topics, ","))
+		key, value := bablkafka.ConsumerGroups(strings.Join(topics, ","))
 		in := &pbm.BinRequest{}
 		err := proto.Unmarshal(value, in)
 		check(err)
