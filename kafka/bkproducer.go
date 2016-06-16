@@ -18,20 +18,20 @@ type ProducerOptions struct {
 }
 
 var (
-	defaults ProducerOptions
-	message  sarama.ProducerMessage
-	logger   = log.New(os.Stderr, "", log.LstdFlags)
+	producerDefaults ProducerOptions
+	producerMessage  sarama.ProducerMessage
+	producerLogger   = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func init() {
-	defaults.Brokers = "localhost:9092"
-	defaults.Partition = 0
-	defaults.Verbose = false
+	producerDefaults.Brokers = "localhost:9092"
+	producerDefaults.Partition = 0
+	producerDefaults.Verbose = false
 }
 
 func getCustomOptions(op ProducerOptions) ProducerOptions {
 	result := ProducerOptions{}
-	result = defaults
+	result = producerDefaults
 	if len(op.Brokers) > 0 {
 		result.Brokers = op.Brokers
 	}
@@ -44,45 +44,45 @@ func getCustomOptions(op ProducerOptions) ProducerOptions {
 
 // Producer Kafka Sarama Producer
 func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...interface{}) {
-	// get options from args if configured, else get defaults (check each property)
+	// get options from args if configured, else get producerDefaults (check each property)
 	options := ProducerOptions{}
-	options = defaults
+	options = producerDefaults
 	if len(args) > 0 {
 		op, ok := args[0].(ProducerOptions)
 		if ok {
 			options = getCustomOptions(op)
 		}
 	}
-	logger.Println("Producer: options=", options)
+	producerLogger.Println("Producer: options=", options)
 
-	// set logger options
+	// set producerLogger options
 	if !options.Verbose {
-		logger.SetOutput(ioutil.Discard)
+		producerLogger.SetOutput(ioutil.Discard)
 	} else {
-		logger.SetOutput(os.Stderr)
+		producerLogger.SetOutput(os.Stderr)
 	}
-	sarama.Logger = logger
+	sarama.Logger = producerLogger
 
-	logger.Printf("Producer: key = %s\r\n", prodKey)
-	logger.Printf("Producer: topic = %s\r\n", prodTopic)
-	logger.Printf("Producer: value = %s\r\n", prodPayload)
+	producerLogger.Printf("Producer: key = %s\r\n", prodKey)
+	producerLogger.Printf("Producer: topic = %s\r\n", prodTopic)
+	producerLogger.Printf("Producer: value = %s\r\n", prodPayload)
 
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.ClientID = "producer-" + getRandomID()
-	logger.Printf("Producer: ClientID: %s\n", config.ClientID)
+	producerLogger.Printf("Producer: ClientID: %s\n", config.ClientID)
 
 	config.Producer.Partitioner = sarama.NewManualPartitioner
-	message := &sarama.ProducerMessage{Topic: prodTopic, Partition: options.Partition}
+	producerMessage := &sarama.ProducerMessage{Topic: prodTopic, Partition: options.Partition}
 	// config.Producer.Partitioner = sarama.NewRandomPartitioner
-	// message := &sarama.ProducerMessage{Topic: prodTopic}
+	// producerMessage := &sarama.ProducerMessage{Topic: prodTopic}
 
-	logger.Printf("Producer: Prepare message: topic=%s\tpartition=%d\n", prodTopic, options.Partition)
+	producerLogger.Printf("Producer: Prepare message: topic=%s\tpartition=%d\n", prodTopic, options.Partition)
 
 	if prodKey != "" {
-		message.Key = sarama.StringEncoder(prodKey)
+		producerMessage.Key = sarama.StringEncoder(prodKey)
 	}
-	message.Value = sarama.ByteEncoder(prodPayload)
+	producerMessage.Value = sarama.ByteEncoder(prodPayload)
 
 	producer, err := sarama.NewSyncProducer(strings.Split(options.Brokers, ","), config)
 	if err != nil {
@@ -91,17 +91,17 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 	}
 	defer func() {
 		if errX := producer.Close(); err != nil {
-			logger.Println("Producer: Failed to close Kafka producer cleanly:", errX)
+			producerLogger.Println("Producer: Failed to close Kafka producer cleanly:", errX)
 			panic(errX)
 		}
 	}()
 
-	partition, offset, err := producer.SendMessage(message)
+	partition, offset, err := producer.SendMessage(producerMessage)
 	if err != nil {
 		printError(69, "Producer: Failed to produce message: %s", err)
 		panic(err)
 	} else if options.Verbose {
-		logger.Printf("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d\n", prodTopic, partition, offset)
+		producerLogger.Printf("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d\n", prodTopic, partition, offset)
 	}
 }
 
