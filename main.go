@@ -9,10 +9,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/larskluge/babl-server-kafka/kafka"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 	"github.com/larskluge/babl/shared"
 	"github.com/nneves/kafka-tools/bkconsumergroups"
-	"github.com/nneves/kafka-tools/bkproducer"
 )
 
 type server struct{}
@@ -55,13 +55,21 @@ func work(topics []string) {
 		msg, err := proto.Marshal(out)
 		check(err)
 		inboxTopic := "inbox." + key
-		bkproducer.Producer(key, inboxTopic, msg)
+		bablkafka.Producer(key, inboxTopic, msg, bablkafka.ProducerOptions{
+			Brokers:   "localhost:9092",
+			Partition: 0,
+			Verbose:   false,
+		})
 	}
 }
 
 func registerModule(mod string) {
 	now := time.Now().UTC().String()
-	bkproducer.Producer(mod, "modules", []byte(now))
+	bablkafka.Producer(mod, "modules", []byte(now), bablkafka.ProducerOptions{
+		Brokers:   "localhost:9092",
+		Partition: 0,
+		Verbose:   false,
+	})
 }
 
 func check(err error) {
