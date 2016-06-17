@@ -40,14 +40,14 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	<-wait
-	//bablkafka.ConsumerClose()
-	bablkafka.ConsumerGroupsClose()
+	//kafka.ConsumerClose()
+	kafka.ConsumerGroupsClose()
 }
 
 func work(topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
-		key, value := bablkafka.ConsumerGroups(strings.Join(topics, ","))
+		key, value := kafka.ConsumerGroups(strings.Join(topics, ","))
 		in := &pbm.BinRequest{}
 		err := proto.Unmarshal(value, in)
 		check(err)
@@ -56,8 +56,8 @@ func work(topics []string) {
 		msg, err := proto.Marshal(out)
 		check(err)
 		inboxTopic := "inbox." + key
-		bablkafka.Producer(key, inboxTopic, msg)
-		// bablkafka.Producer(key, inboxTopic, msg, bablkafka.ProducerOptions{
+		kafka.Producer(key, inboxTopic, msg)
+		// kafka.Producer(key, inboxTopic, msg, kafka.ProducerOptions{
 		// 	Brokers:   "localhost:9092",
 		// 	Partition: 0,
 		// 	Verbose:   true,
@@ -67,8 +67,8 @@ func work(topics []string) {
 
 func registerModule(mod string) {
 	now := time.Now().UTC().String()
-	bablkafka.Producer(mod, "modules", []byte(now))
-	// bablkafka.Producer(mod, "modules", []byte(now), bablkafka.ProducerOptions{
+	kafka.Producer(mod, "modules", []byte(now))
+	// kafka.Producer(mod, "modules", []byte(now), kafka.ProducerOptions{
 	// 	Brokers:   "localhost:9092",
 	// 	Partition: 0,
 	// 	Verbose:   true,

@@ -1,4 +1,4 @@
-package bablkafka
+package kafka
 
 /*
 NOTE: Current Consumer implements a wrapper to ConsumerGroups (should be refactored asap)
