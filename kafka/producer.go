@@ -52,7 +52,6 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 			options = getCustomOptions(op)
 		}
 	}
-	producerLogger.Println("Producer: options=", options)
 
 	// set producerLogger options
 	if !options.Verbose {
