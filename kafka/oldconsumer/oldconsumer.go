@@ -2,6 +2,7 @@ package oldconsumer
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -22,7 +23,6 @@ var (
 	initialOffset int64
 	bufferSize    int
 	verbose       bool
-	silent        bool
 
 	logger = log.New(os.Stderr, "", log.LstdFlags)
 )
@@ -38,32 +38,34 @@ func init() {
 	value = []byte{}
 	initialOffset = sarama.OffsetNewest
 	bufferSize = 256
-	verbose = true
-	silent = false
+	verbose = false
 }
 
 // Consumer babl-kafka-producer function ...
 func Consumer(reqTopic string) (string, []byte) {
-
-	if verbose {
-		sarama.Logger = logger
+	// set producerLogger options
+	if verbose { //!options.Verbose {
+		logger.SetOutput(os.Stderr)
+	} else {
+		logger.SetOutput(ioutil.Discard)
 	}
-
-	//brokerList = "192.168.99.100:9092"
+	sarama.Logger = logger
 
 	value = []byte{}
 	key = ""
 	topic = reqTopic
-	fmt.Printf("Consumer --> topic=%s\r\n", topic)
+	logger.Printf("Consumer: topic=%s\r\n", topic)
 
 	c, err := sarama.NewConsumer(strings.Split(brokerList, ","), nil)
 	if err != nil {
-		printErrorAndExit(69, "Failed to start consumer: %s", err)
+		printError(69, "Consumer: Failed to start consumer: %s", err)
+		panic(err)
 	}
 
 	partitionList, err := getPartitions(c)
 	if err != nil {
-		printErrorAndExit(69, "Failed to get the list of partitions: %s", err)
+		printError(69, "Consumer: Failed to get the list of partitions: %s", err)
+		panic(err)
 	}
 
 	var (
@@ -76,7 +78,7 @@ func Consumer(reqTopic string) (string, []byte) {
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals, os.Kill, os.Interrupt)
 		<-signals
-		logger.Println("Initiating shutdown of consumer...")
+		logger.Println("Consumer: Initiating shutdown of consumer...")
 		//close(closing)
 		os.Exit(1)
 	}()
@@ -84,7 +86,8 @@ func Consumer(reqTopic string) (string, []byte) {
 	for _, partition := range partitionList {
 		pc, err := c.ConsumePartition(topic, partition, initialOffset)
 		if err != nil {
-			printErrorAndExit(69, "Failed to start consumer for partition %d: %s", partition, err)
+			printError(69, "Consumer: Failed to start consumer for partition %d: %s", partition, err)
+			panic(err)
 		}
 
 		go func(pc sarama.PartitionConsumer) {
@@ -103,11 +106,11 @@ func Consumer(reqTopic string) (string, []byte) {
 
 	go func() {
 		for msg := range messages {
-			fmt.Printf("Consumer --> Partition:\t%d\n", msg.Partition)
-			fmt.Printf("Consumer --> Offset:\t%d\n", msg.Offset)
-			fmt.Printf("Consumer --> Key:\t%s\n", string(msg.Key))
-			// fmt.Printf("Consumer --> Value:\t%q\n", string(msg.Value))
-			fmt.Println()
+			logger.Printf("Consumer: Partition:\t%d\n", msg.Partition)
+			logger.Printf("Consumer: Offset:\t%d\n", msg.Offset)
+			logger.Printf("Consumer:Key:\t%s\n", string(msg.Key))
+			// logger.Printf("Consumer: Value:\t%q\n", string(msg.Value))
+			logger.Println()
 			key = string(msg.Key)
 			value = append(value, msg.Value...)
 			// value += msg.Value
@@ -117,11 +120,11 @@ func Consumer(reqTopic string) (string, []byte) {
 	}()
 
 	wg.Wait()
-	logger.Println("Done consuming topic", topic)
+	logger.Println("Consumer: Done consuming topic", topic)
 	close(messages)
 
 	if err := c.Close(); err != nil {
-		logger.Println("Failed to close consumer: ", err)
+		logger.Println("Consumer: Failed to close consumer: ", err)
 	}
 	return key, value
 }
@@ -144,15 +147,7 @@ func getPartitions(c sarama.Consumer) ([]int32, error) {
 	return pList, nil
 }
 
-func printErrorAndExit(code int, format string, values ...interface{}) {
-	fmt.Fprintf(os.Stderr, "ERROR: %s\n", fmt.Sprintf(format, values...))
+func printError(code int, format string, values ...interface{}) {
+	fmt.Fprintf(os.Stderr, "Consumer: ERROR: %s\n", fmt.Sprintf(format, values...))
 	fmt.Fprintln(os.Stderr)
-	os.Exit(code)
-}
-
-func printUsageErrorAndExit(message string) {
-	fmt.Fprintln(os.Stderr, "ERROR:", message)
-	fmt.Fprintln(os.Stderr)
-	fmt.Fprintln(os.Stderr, "Available command line options:")
-	os.Exit(64)
 }
