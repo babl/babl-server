@@ -9,10 +9,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/larskluge/babl-server-kafka/kafka"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 	"github.com/larskluge/babl/shared"
-	"github.com/nneves/kafka-tools/bkconsumergroups"
-	"github.com/nneves/kafka-tools/bkproducer"
 )
 
 type server struct{}
@@ -41,12 +40,14 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	<-wait
+	//bablkafka.ConsumerClose()
+	bablkafka.ConsumerGroupsClose()
 }
 
 func work(topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
-		key, value := bkconsumergroups.ConsumerGroups(strings.Join(topics, ","))
+		key, value := bablkafka.ConsumerGroups(strings.Join(topics, ","))
 		in := &pbm.BinRequest{}
 		err := proto.Unmarshal(value, in)
 		check(err)
@@ -55,13 +56,23 @@ func work(topics []string) {
 		msg, err := proto.Marshal(out)
 		check(err)
 		inboxTopic := "inbox." + key
-		bkproducer.Producer(key, inboxTopic, msg)
+		bablkafka.Producer(key, inboxTopic, msg)
+		// bablkafka.Producer(key, inboxTopic, msg, bablkafka.ProducerOptions{
+		// 	Brokers:   "localhost:9092",
+		// 	Partition: 0,
+		// 	Verbose:   true,
+		// })
 	}
 }
 
 func registerModule(mod string) {
 	now := time.Now().UTC().String()
-	bkproducer.Producer(mod, "modules", []byte(now))
+	bablkafka.Producer(mod, "modules", []byte(now))
+	// bablkafka.Producer(mod, "modules", []byte(now), bablkafka.ProducerOptions{
+	// 	Brokers:   "localhost:9092",
+	// 	Partition: 0,
+	// 	Verbose:   true,
+	// })
 }
 
 func check(err error) {
