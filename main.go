@@ -40,6 +40,7 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	<-wait
+	bablkafka.ConsumerClose()
 	bablkafka.ConsumerGroupsClose()
 }
 
