@@ -1,7 +1,7 @@
 package bablkafka
 
 import (
-	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -21,7 +21,6 @@ type Options struct {
 	Offset     int64
 	BufferSize int64
 	Verbose    bool
-	Silent     bool
 }
 
 var (
@@ -34,12 +33,11 @@ var (
 	initialOffset int64
 	bufferSize    int64
 	verbose       bool
-	silent        bool
 
 	pConsumer *cluster.Consumer
 	wait      = make(chan bool)
 
-	logger = log.New(os.Stderr, "", log.LstdFlags)
+	consumergroupsLogger = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func init() {
@@ -50,8 +48,7 @@ func init() {
 	data = consumerData{"", nil}
 	initialOffset = sarama.OffsetOldest
 	bufferSize = 256
-	verbose = true
-	silent = false
+	verbose = false
 	//pConsumer = cluster.Consumer{}
 }
 
@@ -68,7 +65,6 @@ func ConsumerGroupsConfig(options Options) {
 		bufferSize = options.BufferSize
 	}
 	verbose = options.Verbose
-	silent = options.Silent
 }
 
 // ConsumerGroups Consume messages, retieves when first message arrives
@@ -87,14 +83,15 @@ func ConsumerGroupsMarkOffset() {
 // ConsumerGroupsClose function to Close Consumer
 func ConsumerGroupsClose() {
 	if !initialized {
-		logger.Println("Consumer--> Consumer can not be closed, not initialized!")
+		consumergroupsLogger.Println("ConsumerGroups: Consumer can not be closed, not initialized!")
 		return
 	}
 	initialized = false
 
-	fmt.Printf("Consumer--> Closing consumer: ")
+	consumergroupsLogger.Printf("ConsumerGroups: Closing consumer")
 	if err := pConsumer.Close(); err != nil {
-		logger.Println("Failed to close consumer: ", err)
+		consumergroupsLogger.Println("ConsumerGroups: Failed to close consumer: ", err)
+		panic(err)
 	}
 }
 
@@ -102,45 +99,51 @@ func ConsumerGroupsClose() {
 func consumerInit(reqTopic string) {
 	// returns if consumer is already initialized
 	if initialized {
-		//fmt.Printf("%s already initialized!\n", reqTopic)
+		//consumergroupsLogger.Printf("ConsumerGroups: %s already initialized!\n", reqTopic)
 		go kafkaMessages()
 		return
 	}
 	initialized = true
 
+	// set producerLogger options
+	if verbose { //!options.Verbose {
+		consumergroupsLogger.SetOutput(os.Stderr)
+	} else {
+		consumergroupsLogger.SetOutput(ioutil.Discard)
+	}
+	sarama.Logger = consumergroupsLogger
+
 	// sarama/bsm config
 	config := cluster.NewConfig()
-	config.ClientID = "consumergroups-" + getRandomID()
-	logger.Printf("ClientID: %s\n", config.ClientID)
+	config.Consumer.Return.Errors = true
+	config.Group.Return.Notifications = verbose
 
-	if verbose {
-		sarama.Logger = logger
-	} else {
-		config.Consumer.Return.Errors = true
-		config.Group.Return.Notifications = true
-	}
+	config.ClientID = "consumergroups-" + getRandomID()
+	consumergroupsLogger.Printf("ConsumerGroups: ClientID: %s\n", config.ClientID)
 
 	topicList = reqTopic
 	group = "groups." + topicList
-	// fmt.Printf("Consumer --> topic=%s\r\n", topicList)
-	// fmt.Printf("Consumer --> group=%s\r\n", group)
+	consumergroupsLogger.Printf("ConsumerGroups: topic=%s\r\n", topicList)
+	consumergroupsLogger.Printf("ConsumerGroups: group=%s\r\n", group)
 
 	// Init consumer, consume errors & messages
 	consumer, err := cluster.NewConsumer(strings.Split(brokerList, ","), group, strings.Split(topicList, ","), config)
 	if err != nil {
-		printError(69, "Failed to start consumer: %s", err)
+		consumergroupsLogger.Printf("ConsumerGroups: Failed to start consumer: %s", err)
+		panic(err)
 	}
 	pConsumer = consumer
 
 	go func() {
 		for err := range consumer.Errors() {
-			logger.Printf("Error: %s\n", err.Error())
+			consumergroupsLogger.Printf("ConsumerGroups: Error: %s\n", err.Error())
+			panic(err)
 		}
 	}()
 
 	go func() {
 		for note := range consumer.Notifications() {
-			logger.Printf("Rebalanced: %+v\n", note)
+			consumergroupsLogger.Printf("ConsumerGroups: Rebalanced: %+v\n", note)
 		}
 	}()
 
