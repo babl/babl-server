@@ -15,8 +15,8 @@ type consumerData struct {
 	value []byte
 }
 
-// Options options data struct required for ConsumerGroupsConfig()
-type Options struct {
+// ConsumerGroupsOptions options data struct
+type ConsumerGroupsOptions struct {
 	Brokers    string
 	Offset     int64
 	BufferSize int64
@@ -24,36 +24,46 @@ type Options struct {
 }
 
 var (
-	initialized   bool
+	consumergroupsDefaults ConsumerGroupsOptions
+	consumergroupsMessage  sarama.ConsumerMessage
+	consumergroupsLogger   = log.New(os.Stderr, "", log.LstdFlags)
+
+	// options
 	brokerList    string
-	topicList     string
-	group         string
-	message       sarama.ConsumerMessage
-	data          consumerData
 	initialOffset int64
 	bufferSize    int64
 	verbose       bool
 
+	// data
+	initialized bool
+	topicList   string
+	group       string
+	data        consumerData
+
+	// Pointers/Channels
 	pConsumer *cluster.Consumer
 	wait      = make(chan bool)
-
-	consumergroupsLogger = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func init() {
+	consumergroupsDefaults.Brokers = "127.0.0.1:9092"
+	consumergroupsDefaults.Offset = sarama.OffsetOldest
+	consumergroupsDefaults.BufferSize = 256
+	consumergroupsDefaults.Verbose = false
+
 	initialized = false
-	brokerList = "127.0.0.1:9092"
+	brokerList = consumergroupsDefaults.Brokers
 	topicList = "babl.default-module"
 	group = ""
 	data = consumerData{"", nil}
-	initialOffset = sarama.OffsetOldest
-	bufferSize = 256
-	verbose = false
+	initialOffset = consumergroupsDefaults.Offset
+	bufferSize = consumergroupsDefaults.BufferSize
+	verbose = consumergroupsDefaults.Verbose
 	//pConsumer = cluster.Consumer{}
 }
 
 // ConsumerGroupsConfig Set internal configuration data
-func ConsumerGroupsConfig(options Options) {
+func ConsumerGroupsConfig(options ConsumerGroupsOptions) {
 	if len(options.Brokers) > 0 {
 		brokerList = options.Brokers
 	}
@@ -77,7 +87,7 @@ func ConsumerGroups(reqTopic string) (string, []byte) {
 
 // ConsumerGroupsMarkOffset Marks message offset after being sucessfully processed
 func ConsumerGroupsMarkOffset() {
-	pConsumer.MarkOffset(&message, "")
+	pConsumer.MarkOffset(&consumergroupsMessage, "")
 }
 
 // ConsumerGroupsClose function to Close Consumer
@@ -151,12 +161,14 @@ func consumerInit(reqTopic string) {
 }
 
 func kafkaMessages() {
-	message, ok := <-pConsumer.Messages()
+	consumergroupsMessage, ok := <-pConsumer.Messages()
 	if ok {
-		//fmt.Fprintf(os.Stdout, "bkconsumergroups => %s/%d/%d\t%s\n", message.Topic, message.Partition, message.Offset, message.Value)
-		data.key = string(message.Key)
-		data.value = message.Value
-		//pConsumer.MarkOffset(message, "")
+		//fmt.Fprintf(os.Stdout, "bkconsumergroups => %s/%d/%d\t%s\n",
+		//  consumergroupsMessage.Topic, consumergroupsMessage.Partition,
+		//  consumergroupsMessage.Offset, consumergroupsMessage.Value)
+		data.key = string(consumergroupsMessage.Key)
+		data.value = consumergroupsMessage.Value
+		//pConsumer.MarkOffset(consumergroupsMessage, "")
 		wait <- true
 	}
 }
