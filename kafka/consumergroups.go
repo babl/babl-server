@@ -1,4 +1,4 @@
-package bablkafka
+package kafka
 
 import (
 	"io/ioutil"

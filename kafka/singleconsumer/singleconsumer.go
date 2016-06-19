@@ -1,4 +1,4 @@
-package oldconsumer
+package singleconsumer
 
 import (
 	"fmt"
