@@ -35,6 +35,11 @@ func configureCli() (app *cli.App) {
 			Usage: "Comma separated list of kafka brokers",
 			Value: "127.0.0.1:9092",
 		},
+		cli.BoolFlag{
+			Name:   "debug",
+			Usage:  "Enable debug mode & verbose logging",
+			EnvVar: "BABL_DEBUG",
+		},
 	}
 	return
 }
@@ -48,7 +53,8 @@ func defaultAction(c *cli.Context) error {
 		command = c.String("cmd")
 		address := fmt.Sprintf(":%d", c.Int("port"))
 		brokers := c.String("kafka-brokers")
-		run(module, command, address, brokers)
+		clidebug := c.GlobalBool("debug")
+		run(module, command, address, brokers, clidebug)
 	}
 	return nil
 }
