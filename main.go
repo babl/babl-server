@@ -33,9 +33,9 @@ func run(moduleName, cmd, address, kafkaBrokers string, clidebug bool) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
 	log.Warn("Start module")
+	debug = clidebug
 	command = cmd
 	module := shared.NewModule(moduleName, debug)
-	debug = clidebug
 
 	go registerModule(moduleName)
 	go work([]string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
