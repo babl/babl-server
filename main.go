@@ -16,6 +16,8 @@ import (
 
 type server struct{}
 
+var debug bool
+
 var command string
 
 func main() {
@@ -26,13 +28,14 @@ func main() {
 	app.Run(os.Args)
 }
 
-func run(moduleName, cmd, address, kafkaBrokers string) {
+func run(moduleName, cmd, address, kafkaBrokers string, clidebug bool) {
 	if !shared.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
 	log.Warn("Start module")
 	command = cmd
-	module := shared.NewModule(moduleName, false)
+	module := shared.NewModule(moduleName, debug)
+	debug = clidebug
 
 	go registerModule(moduleName)
 	go work([]string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
@@ -47,6 +50,10 @@ func run(moduleName, cmd, address, kafkaBrokers string) {
 func work(topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
+		kafka.ConsumerGroupsConfig(kafka.ConsumerGroupsOptions{
+			//BufferSize: 512,
+			Verbose: debug,
+		})
 		key, value := kafka.ConsumerGroups(strings.Join(topics, ","))
 		in := &pbm.BinRequest{}
 		err := proto.Unmarshal(value, in)
@@ -56,23 +63,14 @@ func work(topics []string) {
 		msg, err := proto.Marshal(out)
 		check(err)
 		inboxTopic := "inbox." + key
-		kafka.Producer(key, inboxTopic, msg)
-		// kafka.Producer(key, inboxTopic, msg, kafka.ProducerOptions{
-		// 	Brokers:   "localhost:9092",
-		// 	Partition: 0,
-		// 	Verbose:   true,
-		// })
+
+		kafka.Producer(key, inboxTopic, msg, kafka.ProducerOptions{Verbose: debug})
 	}
 }
 
 func registerModule(mod string) {
 	now := time.Now().UTC().String()
-	kafka.Producer(mod, "modules", []byte(now))
-	// kafka.Producer(mod, "modules", []byte(now), kafka.ProducerOptions{
-	// 	Brokers:   "localhost:9092",
-	// 	Partition: 0,
-	// 	Verbose:   true,
-	// })
+	kafka.Producer(mod, "modules", []byte(now), kafka.ProducerOptions{Verbose: debug})
 }
 
 func check(err error) {

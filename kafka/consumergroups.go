@@ -163,9 +163,9 @@ func consumerInit(reqTopic string) {
 func kafkaMessages() {
 	consumergroupsMessage, ok := <-pConsumer.Messages()
 	if ok {
-		//fmt.Fprintf(os.Stdout, "bkconsumergroups => %s/%d/%d\t%s\n",
-		//  consumergroupsMessage.Topic, consumergroupsMessage.Partition,
-		//  consumergroupsMessage.Offset, consumergroupsMessage.Value)
+		// consumergroupsLogger.Printf("ConsumerGroups: %s/%d/%d\t%s\n",
+		// 	consumergroupsMessage.Topic, consumergroupsMessage.Partition,
+		// 	consumergroupsMessage.Offset, consumergroupsMessage.Value)
 		data.key = string(consumergroupsMessage.Key)
 		data.value = consumergroupsMessage.Value
 		//pConsumer.MarkOffset(consumergroupsMessage, "")

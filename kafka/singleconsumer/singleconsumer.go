@@ -22,7 +22,6 @@ var (
 	messages      sarama.ConsumerMessage
 	initialOffset int64
 	bufferSize    int
-	verbose       bool
 
 	logger = log.New(os.Stderr, "", log.LstdFlags)
 )
@@ -38,13 +37,12 @@ func init() {
 	value = []byte{}
 	initialOffset = sarama.OffsetNewest
 	bufferSize = 256
-	verbose = false
 }
 
 // Consumer babl-kafka-producer function ...
-func Consumer(reqTopic string) (string, []byte) {
+func Consumer(reqTopic string, debug bool) (string, []byte) {
 	// set producerLogger options
-	if verbose { //!options.Verbose {
+	if debug {
 		logger.SetOutput(os.Stderr)
 	} else {
 		logger.SetOutput(ioutil.Discard)
