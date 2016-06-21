@@ -63,9 +63,9 @@ func work(topics []string) {
 		check(err)
 		msg, err := proto.Marshal(out)
 		check(err)
-		inboxTopic := "inbox." + key
+		topicOut := "out." + key
 
-		kafka.Producer(key, inboxTopic, msg, kafka.ProducerOptions{Verbose: debug})
+		kafka.Producer(key, topicOut, msg, kafka.ProducerOptions{Verbose: debug})
 	}
 }
 
