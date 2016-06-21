@@ -27,13 +27,15 @@ func main() {
 	app.Run(os.Args)
 }
 
-func run(moduleName, cmd, address, kafkaBrokers string, clidebug bool) {
+func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
+	debug = dbg
+	command = cmd
+
 	if !shared.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
+
 	log.Warn("Start module")
-	debug = clidebug
-	command = cmd
 	module := shared.NewModule(moduleName, debug)
 
 	go registerModule(moduleName)

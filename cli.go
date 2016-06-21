@@ -53,8 +53,8 @@ func defaultAction(c *cli.Context) error {
 		command = c.String("cmd")
 		address := fmt.Sprintf(":%d", c.Int("port"))
 		brokers := c.String("kafka-brokers")
-		clidebug := c.GlobalBool("debug")
-		run(module, command, address, brokers, clidebug)
+		debug := c.GlobalBool("debug")
+		run(module, command, address, brokers, debug)
 	}
 	return nil
 }
