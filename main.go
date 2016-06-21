@@ -9,7 +9,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	"github.com/larskluge/babl-server-kafka/kafka"
+	"github.com/larskluge/babl-server/kafka"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 	"github.com/larskluge/babl/shared"
 )
@@ -17,7 +17,6 @@ import (
 type server struct{}
 
 var debug bool
-
 var command string
 
 func main() {
