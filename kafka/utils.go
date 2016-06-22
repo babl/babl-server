@@ -1,11 +1,12 @@
 package kafka
 
 import (
-	"fmt"
 	"math/rand"
-	"os"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/Shopify/sarama"
 )
 
 func getRandomID() string {
@@ -19,7 +20,20 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func printError(code int, format string, values ...interface{}) {
-	fmt.Fprintf(os.Stderr, "Producer: ERROR: %s\n", fmt.Sprintf(format, values...))
-	fmt.Fprintln(os.Stderr)
+func getPartitions(c sarama.Consumer, topic, partitions string) ([]int32, error) {
+	if partitions == "all" || partitions == "" {
+		return c.Partitions(topic)
+	}
+
+	tmp := strings.Split(partitions, ",")
+	var pList []int32
+	for i := range tmp {
+		val, err := strconv.ParseInt(tmp[i], 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		pList = append(pList, int32(val))
+	}
+
+	return pList, nil
 }

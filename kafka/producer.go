@@ -84,7 +84,7 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 
 	producer, err := sarama.NewSyncProducer(strings.Split(options.Brokers, ","), config)
 	if err != nil {
-		printError(69, "Producer: Failed to open Kafka producer: %s", err)
+		producerLogger.Printf("Producer: Failed to open Kafka producer: %s", err)
 		panic(err)
 	}
 	defer func() {
@@ -96,7 +96,7 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 
 	partition, offset, err := producer.SendMessage(producerMessage)
 	if err != nil {
-		printError(69, "Producer: Failed to produce message: %s", err)
+		producerLogger.Printf("Producer: Failed to produce message: %s", err)
 		panic(err)
 	} else if options.Verbose {
 		producerLogger.Printf("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d\n", prodTopic, partition, offset)
