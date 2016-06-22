@@ -8,10 +8,6 @@ import (
 
 // Producer Kafka Sarama Producer
 func Producer(client sarama.Client, key, topic string, value []byte) {
-	log.Infof("Producer: key = %s\r\n", key)
-	log.Infof("Producer: topic = %s\r\n", topic)
-	log.Infof("Producer: value = %s\r\n", value)
-
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(value),
@@ -31,11 +27,11 @@ func Producer(client sarama.Client, key, topic string, value []byte) {
 	var partition int32
 	var offset int64
 	fn := func() error {
-		log.Infof("Producer: sending message")
+		log.WithFields(log.Fields{"key": key, "topic": topic}).Info("Producer: sending message")
 		partition, offset, err = producer.SendMessage(msg)
 		return err
 	}
 	err = backoff.Retry(fn, backoff.NewExponentialBackOff())
 	check(err)
-	log.Infof("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d", topic, partition, offset)
+	log.WithFields(log.Fields{"topic": topic, "partition": partition, "offset": offset}).Info("Producer: message sent")
 }
