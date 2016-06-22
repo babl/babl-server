@@ -37,3 +37,9 @@ func getPartitions(c sarama.Consumer, topic, partitions string) ([]int32, error)
 
 	return pList, nil
 }
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

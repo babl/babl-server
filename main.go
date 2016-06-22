@@ -38,8 +38,9 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	log.Warn("Start module")
 	module := shared.NewModule(moduleName, debug)
 
-	go registerModule(moduleName)
-	go work([]string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+	brokers := strings.Split(kafkaBrokers, ",")
+	go registerModule(brokers, moduleName)
+	go work(brokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
@@ -48,12 +49,13 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	kafka.ConsumerGroupsClose()
 }
 
-func work(topics []string) {
+func work(brokers, topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
 		kafka.ConsumerGroupsConfig(kafka.ConsumerGroupsOptions{
 			//BufferSize: 512,
 			Verbose: debug,
+			Brokers: strings.Join(brokers, ","),
 		})
 		key, value := kafka.ConsumerGroups(strings.Join(topics, ","))
 		in := &pbm.BinRequest{}
@@ -65,13 +67,13 @@ func work(topics []string) {
 		check(err)
 		topicOut := "out." + key
 
-		kafka.Producer(key, topicOut, msg, kafka.ProducerOptions{Verbose: debug})
+		kafka.Producer(brokers, key, topicOut, msg, debug)
 	}
 }
 
-func registerModule(mod string) {
+func registerModule(brokers []string, mod string) {
 	now := time.Now().UTC().String()
-	kafka.Producer(mod, "modules", []byte(now), kafka.ProducerOptions{Verbose: debug})
+	kafka.Producer(brokers, mod, "modules", []byte(now), debug)
 }
 
 func check(err error) {
