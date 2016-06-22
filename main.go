@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/larskluge/babl-server/kafka"
@@ -39,8 +40,10 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	module := shared.NewModule(moduleName, debug)
 
 	brokers := strings.Split(kafkaBrokers, ",")
-	go registerModule(brokers, moduleName)
-	go work(brokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+	client := *kafka.NewClient(brokers, debug)
+	defer client.Close()
+	go registerModule(client, moduleName)
+	go work(client, kafkaBrokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
@@ -49,13 +52,13 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	kafka.ConsumerGroupsClose()
 }
 
-func work(brokers, topics []string) {
+func work(client sarama.Client, brokers string, topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
 		kafka.ConsumerGroupsConfig(kafka.ConsumerGroupsOptions{
 			//BufferSize: 512,
 			Verbose: debug,
-			Brokers: strings.Join(brokers, ","),
+			Brokers: brokers,
 		})
 		key, value := kafka.ConsumerGroups(strings.Join(topics, ","))
 		in := &pbm.BinRequest{}
@@ -67,13 +70,13 @@ func work(brokers, topics []string) {
 		check(err)
 		topicOut := "out." + key
 
-		kafka.Producer(brokers, key, topicOut, msg, debug)
+		kafka.Producer(client, key, topicOut, msg)
 	}
 }
 
-func registerModule(brokers []string, mod string) {
+func registerModule(client sarama.Client, mod string) {
 	now := time.Now().UTC().String()
-	kafka.Producer(brokers, mod, "modules", []byte(now), debug)
+	kafka.Producer(client, mod, "modules", []byte(now))
 }
 
 func check(err error) {

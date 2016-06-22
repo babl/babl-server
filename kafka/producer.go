@@ -1,39 +1,16 @@
 package kafka
 
 import (
-	"io/ioutil"
-	stdlog "log"
-	"os"
-
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/cenk/backoff"
 )
 
 // Producer Kafka Sarama Producer
-func Producer(brokers []string, key, topic string, value []byte, debug bool) {
-	logger := stdlog.New(os.Stderr, "", stdlog.LstdFlags)
-	if debug {
-		logger.SetOutput(os.Stderr)
-	} else {
-		logger.SetOutput(ioutil.Discard)
-	}
-	sarama.Logger = logger
-
+func Producer(client sarama.Client, key, topic string, value []byte) {
 	log.Infof("Producer: key = %s\r\n", key)
 	log.Infof("Producer: topic = %s\r\n", topic)
 	log.Infof("Producer: value = %s\r\n", value)
-
-	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.ClientID = "producer-" + getRandomID()
-	log.Infof("Producer: ClientID: %s\n", config.ClientID)
-
-	config.Producer.Partitioner = sarama.NewManualPartitioner
-	// config.Producer.Partitioner = sarama.NewRandomPartitioner
-	// msg := &sarama.ProducerMessage{Topic: topic}
-
-	log.Infof("Producer: Prepare message: topic=%s\tpartition=%d\n", topic, 0)
 
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
@@ -43,7 +20,7 @@ func Producer(brokers []string, key, topic string, value []byte, debug bool) {
 		msg.Key = sarama.StringEncoder(key)
 	}
 
-	producer, err := sarama.NewSyncProducer(brokers, config)
+	producer, err := sarama.NewSyncProducerFromClient(client)
 	check(err)
 	defer func() {
 		log.Infof("Producer: Close Producer")
