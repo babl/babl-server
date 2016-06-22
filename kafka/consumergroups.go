@@ -10,7 +10,8 @@ import (
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 
-type consumerData struct {
+// ConsumerGroupsData struct for the kafka received messages
+type ConsumerGroupsData struct {
 	key   string
 	value []byte
 }
@@ -38,7 +39,7 @@ var (
 	initialized bool
 	topicList   string
 	group       string
-	data        consumerData
+	data        ConsumerGroupsData
 
 	// Pointers/Channels
 	pConsumer *cluster.Consumer
@@ -55,7 +56,7 @@ func init() {
 	brokerList = consumergroupsDefaults.Brokers
 	topicList = "babl.default-module"
 	group = ""
-	data = consumerData{"", nil}
+	data = ConsumerGroupsData{"", nil}
 	initialOffset = consumergroupsDefaults.Offset
 	bufferSize = consumergroupsDefaults.BufferSize
 	verbose = consumergroupsDefaults.Verbose
