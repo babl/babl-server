@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/Shopify/sarama"
 )
@@ -25,8 +26,6 @@ type ConsumerOptions struct {
 
 var (
 	consumerDefaults ConsumerOptions
-	consumerMessage  sarama.ConsumerMessage
-	consumerLogger   = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func init() {
@@ -54,6 +53,13 @@ func getConsumerCustomOptions(op ConsumerOptions) ConsumerOptions {
 
 // Consumer Kafka Sarama Consumer ((reqTopic string, debug bool)
 func Consumer(consTopic string, args ...interface{}) (string, []byte) {
+	var (
+		consumerLogger = log.New(os.Stderr, "", log.LstdFlags)
+		closing        = make(chan struct{})
+		wait           = make(chan bool)
+		waitgroup      sync.WaitGroup
+	)
+
 	// get options from args if configured, else get consumerDefaults (check each property)
 	options := ConsumerOptions{}
 	options = consumerDefaults
@@ -64,10 +70,6 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 		}
 	}
 
-	var (
-		closing = make(chan struct{})
-		wait    = make(chan bool)
-	)
 	data := ConsumerData{"", []byte{}}
 
 	// set consumerLogger options
@@ -84,7 +86,7 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.ClientID = "consumer-" + getRandomID()
 	config.ChannelBufferSize = options.BufferSize
-	producerLogger.Printf("Consumer: ClientID: %s\n", config.ClientID)
+	consumerLogger.Printf("Consumer: ClientID: %s\n", config.ClientID)
 
 	c, err := sarama.NewConsumer(strings.Split(brokerList, ","), config)
 	if err != nil {
@@ -99,6 +101,7 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 	}
 
 	for _, partition := range partitionList {
+		waitgroup.Add(1)
 		pc, err := c.ConsumePartition(consTopic, partition, initialOffset)
 		if err != nil {
 			consumerLogger.Printf("Consumer: Failed to start consumer for partition %d: %s", partition, err)
@@ -111,6 +114,7 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 		}(pc)
 
 		go func(pc sarama.PartitionConsumer) {
+			defer waitgroup.Done()
 			for message := range pc.Messages() {
 				if message.Offset == 0 && len(message.Value) == 0 {
 					// When creating topics with Producer will create an empty 1st message
@@ -124,13 +128,16 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 				data.key = string(message.Key)
 				data.value = message.Value
 				wait <- true
+				break // only reads 1 non-empty message!
 			}
 		}(pc)
 	}
 	<-wait
+	waitgroup.Wait()
 	consumerLogger.Println("Consumer: Done consuming topic", consTopic)
 	close(closing)
 
+	// close kafka connection
 	if err := c.Close(); err != nil {
 		consumerLogger.Println("Consumer: Failed to close consumer: ", err)
 	}

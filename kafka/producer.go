@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Shopify/sarama"
 )
@@ -18,8 +19,6 @@ type ProducerOptions struct {
 
 var (
 	producerDefaults ProducerOptions
-	producerMessage  sarama.ProducerMessage
-	producerLogger   = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func init() {
@@ -43,6 +42,8 @@ func getCustomOptions(op ProducerOptions) ProducerOptions {
 
 // Producer Kafka Sarama Producer
 func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...interface{}) {
+	var producerLogger = log.New(os.Stderr, "", log.LstdFlags)
+
 	// get options from args if configured, else get producerDefaults (check each property)
 	options := ProducerOptions{}
 	options = producerDefaults
@@ -68,6 +69,8 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.ClientID = "producer-" + getRandomID()
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
 	producerLogger.Printf("Producer: ClientID: %s\n", config.ClientID)
 
 	config.Producer.Partitioner = sarama.NewManualPartitioner
@@ -84,21 +87,32 @@ func Producer(prodKey string, prodTopic string, prodPayload []byte, args ...inte
 
 	producer, err := sarama.NewSyncProducer(strings.Split(options.Brokers, ","), config)
 	if err != nil {
-		producerLogger.Printf("Producer: Failed to open Kafka producer: %s", err)
+		producerLogger.Printf("Producer: Fail to open Kafka producer: %s", err)
 		panic(err)
 	}
-	defer func() {
-		if errX := producer.Close(); err != nil {
-			producerLogger.Println("Producer: Failed to close Kafka producer cleanly:", errX)
-			panic(errX)
-		}
-	}()
 
-	partition, offset, err := producer.SendMessage(producerMessage)
-	if err != nil {
-		producerLogger.Printf("Producer: Failed to produce message: %s", err)
-		panic(err)
-	} else if options.Verbose {
+	msgRetry := int(0)
+	for {
+		partition, offset, err := producer.SendMessage(producerMessage)
+		if err != nil && msgRetry < 10 {
+			msgRetry++
+			producerLogger.Printf("Producer: Fail to produce message, Retry ... #%d", msgRetry)
+			timerWait := time.NewTimer(time.Millisecond * 100)
+			<-timerWait.C
+			continue
+		}
+		if err != nil {
+			producerLogger.Printf("Producer: Fail to produce message: %s", err)
+			panic(err)
+		}
 		producerLogger.Printf("Producer: SendMessage(): topic=%s\tpartition=%d\toffset=%d\n", prodTopic, partition, offset)
+		break
+	}
+
+	// close kafka connection
+	producerLogger.Println("Producer: Close Producer")
+	if errClose := producer.Close(); errClose != nil {
+		producerLogger.Println("Producer: Failed to close producer cleanly:", errClose)
+		panic(errClose)
 	}
 }
