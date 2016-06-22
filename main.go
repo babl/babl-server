@@ -40,10 +40,17 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	module := shared.NewModule(moduleName, debug)
 
 	brokers := strings.Split(kafkaBrokers, ",")
-	client := *kafka.NewClient(brokers, debug)
+	client := kafka.NewClient(brokers, debug)
 	defer client.Close()
-	go registerModule(client, moduleName)
-	go work(client, kafkaBrokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+	producer := kafka.NewProducer(client)
+	defer func() {
+		log.Infof("Producer: Close Producer")
+		err := producer.Close()
+		check(err)
+	}()
+
+	go registerModule(producer, moduleName)
+	go work(producer, kafkaBrokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
@@ -52,7 +59,7 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	kafka.ConsumerGroupsClose()
 }
 
-func work(client sarama.Client, brokers string, topics []string) {
+func work(producer sarama.SyncProducer, brokers string, topics []string) {
 	for {
 		log.Infof("Work on topics %q", topics)
 		kafka.ConsumerGroupsConfig(kafka.ConsumerGroupsOptions{
@@ -70,13 +77,13 @@ func work(client sarama.Client, brokers string, topics []string) {
 		check(err)
 		topicOut := "out." + key
 
-		kafka.Producer(client, key, topicOut, msg)
+		kafka.SendMessage(producer, key, topicOut, msg)
 	}
 }
 
-func registerModule(client sarama.Client, mod string) {
+func registerModule(producer sarama.SyncProducer, mod string) {
 	now := time.Now().UTC().String()
-	kafka.Producer(client, mod, "modules", []byte(now))
+	kafka.SendMessage(producer, mod, "modules", []byte(now))
 }
 
 func check(err error) {

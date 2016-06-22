@@ -9,7 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-func NewClient(brokers []string, debug bool) *sarama.Client {
+func NewClient(brokers []string, debug bool) sarama.Client {
 	logger := stdlog.New(os.Stderr, "", stdlog.LstdFlags)
 	if debug {
 		logger.SetOutput(os.Stderr)
@@ -28,5 +28,5 @@ func NewClient(brokers []string, debug bool) *sarama.Client {
 
 	client, err := sarama.NewClient(brokers, config)
 	check(err)
-	return &client
+	return client
 }

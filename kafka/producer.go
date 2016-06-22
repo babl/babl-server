@@ -6,8 +6,14 @@ import (
 	"github.com/cenk/backoff"
 )
 
+func NewProducer(client sarama.Client) sarama.SyncProducer {
+	producer, err := sarama.NewSyncProducerFromClient(client)
+	check(err)
+	return producer
+}
+
 // Producer Kafka Sarama Producer
-func Producer(client sarama.Client, key, topic string, value []byte) {
+func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) {
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(value),
@@ -16,16 +22,10 @@ func Producer(client sarama.Client, key, topic string, value []byte) {
 		msg.Key = sarama.StringEncoder(key)
 	}
 
-	producer, err := sarama.NewSyncProducerFromClient(client)
-	check(err)
-	defer func() {
-		log.Infof("Producer: Close Producer")
-		err := producer.Close()
-		check(err)
-	}()
-
 	var partition int32
 	var offset int64
+	var err error
+
 	fn := func() error {
 		log.WithFields(log.Fields{"key": key, "topic": topic}).Info("Producer: sending message")
 		partition, offset, err = producer.SendMessage(msg)
