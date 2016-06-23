@@ -69,7 +69,6 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 			options = getConsumerCustomOptions(op)
 		}
 	}
-
 	data := ConsumerData{"", []byte{}}
 
 	// set consumerLogger options
@@ -102,7 +101,7 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 
 	for _, partition := range partitionList {
 		waitgroup.Add(1)
-		pc, err := c.ConsumePartition(consTopic, partition, initialOffset)
+		pc, err := c.ConsumePartition(consTopic, partition, sarama.OffsetNewest)
 		if err != nil {
 			consumerLogger.Printf("Consumer: Failed to start consumer for partition %d: %s", partition, err)
 			panic(err)
@@ -122,8 +121,10 @@ func Consumer(consTopic string, args ...interface{}) (string, []byte) {
 				}
 				consumerLogger.Printf("Consumer: Partition: %d\n", message.Partition)
 				consumerLogger.Printf("Consumer: Offset: %d\n", message.Offset)
+				consumerLogger.Printf("Consumer: HighWaterMarkOffset: %d\n", pc.HighWaterMarkOffset())
 				consumerLogger.Printf("Consumer: Key: %s\n", string(message.Key))
 				consumerLogger.Printf("Consumer: Value: %q\n", string(message.Value))
+
 				consumerLogger.Println()
 				data.key = string(message.Key)
 				data.value = message.Value
