@@ -37,6 +37,9 @@ func NewClientGroup(brokers []string, clientID string, debug bool) *cluster.Clie
 	config := cluster.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.ClientID = clientID
+	config.Consumer.Return.Errors = true
+	config.Group.Return.Notifications = true
+
 	log.WithFields(log.Fields{"client id": config.ClientID}).Debug("Client id set")
 	// config.ChannelBufferSize = 1024
 
