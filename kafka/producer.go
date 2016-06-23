@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"time"
+
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/cenk/backoff"
@@ -15,6 +17,7 @@ func NewProducer(client sarama.Client) sarama.SyncProducer {
 
 // SendMessage send message to sarama.Producer
 func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) {
+	start := time.Now()
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(value),
@@ -34,5 +37,6 @@ func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) 
 	}
 	err = backoff.Retry(fn, backoff.NewExponentialBackOff())
 	check(err)
-	log.WithFields(log.Fields{"topic": topic, "partition": partition, "offset": offset}).Info("Producer: message sent")
+	elapsed := float64(time.Since(start).Seconds() * 1000)
+	log.WithFields(log.Fields{"topic": topic, "partition": partition, "offset": offset, "duration_ms": elapsed}).Info("Producer: message sent")
 }
