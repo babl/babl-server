@@ -75,9 +75,12 @@ func work(producer sarama.SyncProducer, brokers string, topics []string) {
 		check(err)
 		msg, err := proto.Marshal(out)
 		check(err)
-		topicOut := "out." + key
 
-		kafka.SendMessage(producer, key, topicOut, msg)
+		n := strings.LastIndex(key, ".")
+		host := key[:n]
+		skey := key[n+1:]
+		stopic := "supervisor." + host
+		kafka.SendMessage(producer, skey, stopic, msg)
 	}
 }
 
