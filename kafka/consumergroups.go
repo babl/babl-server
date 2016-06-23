@@ -16,8 +16,8 @@ func ConsumeGroup(client *cluster.Client, topic string, ch chan ConsumerData) {
 	check(err)
 	defer consumer.Close()
 
-	go consumerErrors(consumer)
-	go consumerNotifications(consumer)
+	go consumeErrors(consumer)
+	go consumeNotifications(consumer)
 
 	for msg := range consumer.Messages() {
 		data := ConsumerData{Key: string(msg.Key), Value: msg.Value}
@@ -28,14 +28,14 @@ func ConsumeGroup(client *cluster.Client, topic string, ch chan ConsumerData) {
 	log.Println("ConsumerGroups: Done consuming topic/groups", topic)
 }
 
-func consumerErrors(consumer *cluster.Consumer) {
+func consumeErrors(consumer *cluster.Consumer) {
 	for err := range consumer.Errors() {
 		log.WithFields(log.Fields{"error": err.Error()}).Info("Group Message Error")
 		check(err)
 	}
 }
 
-func consumerNotifications(consumer *cluster.Consumer) {
+func consumeNotifications(consumer *cluster.Consumer) {
 	for note := range consumer.Notifications() {
 		log.WithFields(log.Fields{"rebalanced": note}).Info("Group Message Rebalanced Notification")
 	}
