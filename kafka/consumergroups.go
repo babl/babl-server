@@ -1,175 +1,42 @@
 package kafka
 
 import (
-	"io/ioutil"
-	"log"
-	"os"
 	"strings"
 
-	"github.com/Shopify/sarama"
+	log "github.com/Sirupsen/logrus"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 
-// ConsumerGroupsData struct for the kafka received messages
-type ConsumerGroupsData struct {
-	key   string
-	value []byte
-}
+// ConsumeGroup Kafka Sarama/Cluster Group Consumer
+func ConsumeGroup(client *cluster.Client, topic string, ch chan ConsumerData) {
+	group := "group." + topic
+	log.WithFields(log.Fields{"topic": topic, "group": group, "offset": "newest"}).Info("Consuming Groups")
 
-// ConsumerGroupsOptions options data struct
-type ConsumerGroupsOptions struct {
-	Brokers    string
-	Offset     int64
-	BufferSize int64
-	Verbose    bool
-}
+	consumer, err := cluster.NewConsumerFromClient(client, group, strings.Split(topic, ","))
+	check(err)
+	defer consumer.Close()
 
-var (
-	consumergroupsDefaults ConsumerGroupsOptions
-	consumergroupsMessage  sarama.ConsumerMessage
-	consumergroupsLogger   = log.New(os.Stderr, "", log.LstdFlags)
+	go consumerErrors(consumer)
+	go consumerNotifications(consumer)
 
-	// options
-	brokerList    string
-	initialOffset int64
-	bufferSize    int64
-	verbose       bool
-
-	// data
-	initialized bool
-	topicList   string
-	group       string
-	data        ConsumerGroupsData
-
-	// Pointers/Channels
-	pConsumer *cluster.Consumer
-	wait      = make(chan bool)
-)
-
-func init() {
-	consumergroupsDefaults.Brokers = "127.0.0.1:9092"
-	consumergroupsDefaults.Offset = sarama.OffsetOldest
-	consumergroupsDefaults.BufferSize = 256
-	consumergroupsDefaults.Verbose = false
-
-	initialized = false
-	brokerList = consumergroupsDefaults.Brokers
-	topicList = "babl.default-module"
-	group = ""
-	data = ConsumerGroupsData{"", nil}
-	initialOffset = consumergroupsDefaults.Offset
-	bufferSize = consumergroupsDefaults.BufferSize
-	verbose = consumergroupsDefaults.Verbose
-	//pConsumer = cluster.Consumer{}
-}
-
-// ConsumerGroupsConfig Set internal configuration data
-func ConsumerGroupsConfig(options ConsumerGroupsOptions) {
-	if len(options.Brokers) > 0 {
-		brokerList = options.Brokers
+	for msg := range consumer.Messages() {
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value}
+		log.WithFields(log.Fields{"topic": topic, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Group Message Received")
+		ch <- data
+		consumer.MarkOffset(msg, "")
 	}
-	if options.Offset != 0 {
-		// https://godoc.org/github.com/Shopify/sarama#pkg-constants
-		initialOffset = options.Offset
-	}
-	if options.BufferSize > 0 {
-		bufferSize = options.BufferSize
-	}
-	verbose = options.Verbose
+	log.Println("ConsumerGroups: Done consuming topic/groups", topic)
 }
 
-// ConsumerGroups Consume messages, retieves when first message arrives
-func ConsumerGroups(reqTopic string) (string, []byte) {
-	// Initialize Consumer
-	consumerInit(reqTopic)
-	<-wait
-	return data.key, data.value
-}
-
-// ConsumerGroupsMarkOffset Marks message offset after being sucessfully processed
-func ConsumerGroupsMarkOffset() {
-	pConsumer.MarkOffset(&consumergroupsMessage, "")
-}
-
-// ConsumerGroupsClose function to Close Consumer
-func ConsumerGroupsClose() {
-	if !initialized {
-		consumergroupsLogger.Println("ConsumerGroups: Consumer can not be closed, not initialized!")
-		return
-	}
-	initialized = false
-
-	consumergroupsLogger.Printf("ConsumerGroups: Closing consumer")
-	if err := pConsumer.Close(); err != nil {
-		consumergroupsLogger.Println("ConsumerGroups: Failed to close consumer: ", err)
-		panic(err)
+func consumerErrors(consumer *cluster.Consumer) {
+	for err := range consumer.Errors() {
+		log.WithFields(log.Fields{"error": err.Error()}).Info("Group Message Error")
+		check(err)
 	}
 }
 
-// Initialize and Consumer Sarama/BSM groups
-func consumerInit(reqTopic string) {
-	// returns if consumer is already initialized
-	if initialized {
-		//consumergroupsLogger.Printf("ConsumerGroups: %s already initialized!\n", reqTopic)
-		go kafkaMessages()
-		return
-	}
-	initialized = true
-
-	// set producerLogger options
-	if verbose { //!options.Verbose {
-		consumergroupsLogger.SetOutput(os.Stderr)
-	} else {
-		consumergroupsLogger.SetOutput(ioutil.Discard)
-	}
-	sarama.Logger = consumergroupsLogger
-
-	// sarama/bsm config
-	config := cluster.NewConfig()
-	config.Consumer.Return.Errors = true
-	config.Group.Return.Notifications = verbose
-
-	config.ClientID = "consumergroups-" + getRandomID()
-	consumergroupsLogger.Printf("ConsumerGroups: ClientID: %s\n", config.ClientID)
-
-	topicList = reqTopic
-	group = "groups." + topicList
-	consumergroupsLogger.Printf("ConsumerGroups: topic=%s\r\n", topicList)
-	consumergroupsLogger.Printf("ConsumerGroups: group=%s\r\n", group)
-
-	// Init consumer, consume errors & messages
-	consumer, err := cluster.NewConsumer(strings.Split(brokerList, ","), group, strings.Split(topicList, ","), config)
-	if err != nil {
-		consumergroupsLogger.Printf("ConsumerGroups: Failed to start consumer: %s", err)
-		panic(err)
-	}
-	pConsumer = consumer
-
-	go func() {
-		for err := range consumer.Errors() {
-			consumergroupsLogger.Printf("ConsumerGroups: Error: %s\n", err.Error())
-			panic(err)
-		}
-	}()
-
-	go func() {
-		for note := range consumer.Notifications() {
-			consumergroupsLogger.Printf("ConsumerGroups: Rebalanced: %+v\n", note)
-		}
-	}()
-
-	go kafkaMessages()
-}
-
-func kafkaMessages() {
-	consumergroupsMessage, ok := <-pConsumer.Messages()
-	if ok {
-		// consumergroupsLogger.Printf("ConsumerGroups: %s/%d/%d\t%s\n",
-		// 	consumergroupsMessage.Topic, consumergroupsMessage.Partition,
-		// 	consumergroupsMessage.Offset, consumergroupsMessage.Value)
-		data.key = string(consumergroupsMessage.Key)
-		data.value = consumergroupsMessage.Value
-		//pConsumer.MarkOffset(consumergroupsMessage, "")
-		wait <- true
+func consumerNotifications(consumer *cluster.Consumer) {
+	for note := range consumer.Notifications() {
+		log.WithFields(log.Fields{"rebalanced": note}).Info("Group Message Rebalanced Notification")
 	}
 }

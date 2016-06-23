@@ -5,12 +5,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+// ConsumerData struct used by Consume() and ConsumeGroup()
 type ConsumerData struct {
 	Key   string
 	Value []byte
 }
 
-// Consumer Kafka Sarama Consumer ((reqTopic string, debug bool)
+// Consume Kafka Sarama Consumer
 func Consume(client sarama.Client, topic string, ch chan ConsumerData) {
 	log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": "newest"}).Info("Consuming")
 
