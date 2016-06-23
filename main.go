@@ -40,7 +40,7 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	module := shared.NewModule(moduleName, debug)
 
 	brokers := strings.Split(kafkaBrokers, ",")
-	client := kafka.NewClient(brokers, debug)
+	client := kafka.NewClient(brokers, "babl-server", debug)
 	defer client.Close()
 	producer := kafka.NewProducer(client)
 	defer func() {

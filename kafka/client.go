@@ -9,7 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-func NewClient(brokers []string, debug bool) sarama.Client {
+func NewClient(brokers []string, clientID string, debug bool) sarama.Client {
 	logger := stdlog.New(os.Stderr, "", stdlog.LstdFlags)
 	if debug {
 		logger.SetOutput(os.Stderr)
@@ -20,8 +20,9 @@ func NewClient(brokers []string, debug bool) sarama.Client {
 
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.ClientID = "producer-" + getRandomID()
-	log.Infof("Producer: ClientID: %s\n", config.ClientID)
+	config.ClientID = clientID
+	log.WithFields(log.Fields{"client id": config.ClientID}).Debug("Client id set")
+	// config.ChannelBufferSize = 1024
 
 	config.Producer.Partitioner = sarama.NewManualPartitioner
 	// config.Producer.Partitioner = sarama.NewRandomPartitioner
