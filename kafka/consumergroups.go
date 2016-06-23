@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"sort"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -8,11 +9,11 @@ import (
 )
 
 // ConsumeGroup Kafka Sarama/Cluster Group Consumer
-func ConsumeGroup(client *cluster.Client, topic string, ch chan ConsumerData) {
-	group := "group." + topic
-	log.WithFields(log.Fields{"topic": topic, "group": group, "offset": "newest"}).Info("Consuming Groups")
+func ConsumeGroup(client *cluster.Client, topics []string, ch chan ConsumerData) {
+	group := ConsumeGroupName(topics)
+	log.WithFields(log.Fields{"topics": topics, "group": group, "offset": "newest"}).Info("Consuming Groups")
 
-	consumer, err := cluster.NewConsumerFromClient(client, group, strings.Split(topic, ","))
+	consumer, err := cluster.NewConsumerFromClient(client, group, topics)
 	check(err)
 	defer consumer.Close()
 
@@ -21,11 +22,17 @@ func ConsumeGroup(client *cluster.Client, topic string, ch chan ConsumerData) {
 
 	for msg := range consumer.Messages() {
 		data := ConsumerData{Key: string(msg.Key), Value: msg.Value}
-		log.WithFields(log.Fields{"topic": topic, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Group Message Received")
+		log.WithFields(log.Fields{"topics": topics, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Group Message Received")
 		ch <- data
 		consumer.MarkOffset(msg, "")
 	}
-	log.Println("ConsumerGroups: Done consuming topic/groups", topic)
+	log.Println("ConsumerGroups: Done consuming topic/groups", topics)
+}
+
+// ConsumeGroupName unified way to generate a group name
+func ConsumeGroupName(topics []string) string {
+	sort.Strings(topics)
+	return "group." + strings.Join(topics, "|")
 }
 
 func consumeErrors(consumer *cluster.Consumer) {

@@ -63,10 +63,10 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 
 func work(clientgroup *cluster.Client, producer sarama.SyncProducer, brokers string, topics []string) {
 	ch := make(chan kafka.ConsumerData)
-	go kafka.ConsumeGroup(clientgroup, strings.Join(topics, ","), ch)
+	go kafka.ConsumeGroup(clientgroup, topics, ch)
 
 	for {
-		log.Infof("Work on topics %q", strings.Join(topics, ","))
+		log.WithFields(log.Fields{"topics": topics}).Debug("Work")
 
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
