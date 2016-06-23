@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"gopkg.in/bsm/sarama-cluster.v2"
+
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
@@ -41,7 +43,9 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 
 	brokers := strings.Split(kafkaBrokers, ",")
 	client := kafka.NewClient(brokers, "babl-server", debug)
+	clientgroup := kafka.NewClientGroup(brokers, "babl-server", debug)
 	defer client.Close()
+	defer clientgroup.Close()
 	producer := kafka.NewProducer(client)
 	defer func() {
 		log.Infof("Producer: Close Producer")
@@ -50,35 +54,34 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	}()
 
 	go registerModule(producer, moduleName)
-	go work(producer, kafkaBrokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+	go work(clientgroup, producer, kafkaBrokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	<-wait
-	//kafka.ConsumerClose()
-	kafka.ConsumerGroupsClose()
 }
 
-func work(producer sarama.SyncProducer, brokers string, topics []string) {
+func work(clientgroup *cluster.Client, producer sarama.SyncProducer, brokers string, topics []string) {
+	ch := make(chan kafka.ConsumerData)
+	go kafka.ConsumeGroup(clientgroup, strings.Join(topics, ","), ch)
+
 	for {
-		log.Infof("Work on topics %q", topics)
-		kafka.ConsumerGroupsConfig(kafka.ConsumerGroupsOptions{
-			//BufferSize: 512,
-			Verbose: debug,
-			Brokers: brokers,
-		})
-		key, value := kafka.ConsumerGroups(strings.Join(topics, ","))
+		log.Infof("Work on topics %q", strings.Join(topics, ","))
+
+		data, _ := <-ch
+		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
+
 		in := &pbm.BinRequest{}
-		err := proto.Unmarshal(value, in)
+		err := proto.Unmarshal(data.Value, in)
 		check(err)
 		out, err := IO(in)
 		check(err)
 		msg, err := proto.Marshal(out)
 		check(err)
 
-		n := strings.LastIndex(key, ".")
-		host := key[:n]
-		skey := key[n+1:]
+		n := strings.LastIndex(data.Key, ".")
+		host := data.Key[:n]
+		skey := data.Key[n+1:]
 		stopic := "supervisor." + host
 		kafka.SendMessage(producer, skey, stopic, msg)
 	}

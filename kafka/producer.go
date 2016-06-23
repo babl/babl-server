@@ -6,13 +6,14 @@ import (
 	"github.com/cenk/backoff"
 )
 
+// NewProducer create a new Producer object
 func NewProducer(client sarama.Client) sarama.SyncProducer {
 	producer, err := sarama.NewSyncProducerFromClient(client)
 	check(err)
 	return producer
 }
 
-// Producer Kafka Sarama Producer
+// SendMessage send message to sarama.Producer
 func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) {
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
