@@ -31,13 +31,15 @@ func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) 
 	var err error
 
 	fn := func() error {
-		log.WithFields(log.Fields{"key": key, "topic": topic}).Info("Producer: sending message")
-		partition, offset, err = producer.SendMessage(msg)
+		_, _, err = producer.SendMessage(msg)
 		return err
 	}
+	notify := func(err error, duration time.Duration) {
+		log.WithFields(log.Fields{"error": err, "duration": duration, "topic": topic}).Warn("Producer: send message error, retrying..")
+	}
 	start := time.Now()
-	err = backoff.Retry(fn, backoff.NewExponentialBackOff())
+	err = backoff.RetryNotify(fn, backoff.NewExponentialBackOff(), notify)
 	check(err)
 	elapsed := float64(time.Since(start).Seconds() * 1000)
-	log.WithFields(log.Fields{"topic": topic, "partition": partition, "offset": offset, "duration_ms": elapsed}).Info("Producer: message sent")
+	log.WithFields(log.Fields{"topic": topic, "key": key, "partition": partition, "offset": offset, "duration_ms": elapsed}).Info("Producer: message sent")
 }
