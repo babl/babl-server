@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"time"
-
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/bsm/sarama-cluster.v2"
@@ -15,21 +13,10 @@ func config(clientID string) *sarama.Config {
 
 	cfg.Consumer.Return.Errors = true
 
-	cfg.Producer.RequiredAcks = 1 //sarama.WaitForAll
-	cfg.Producer.Retry.Backoff = 3 * time.Second
-	cfg.Producer.Retry.Max = 0
-	cfg.Producer.Flush.MaxMessages = 1
-	cfg.Producer.Flush.Frequency = 50 * time.Millisecond
-	// cfg.Producer.Partitioner = sarama.NewManualPartitioner
+	cfg.Producer.RequiredAcks = sarama.WaitForAll
 	cfg.Producer.Partitioner = sarama.NewRandomPartitioner
 
-	cfg.Metadata.Retry.Max = 0
-	// cfg.Metadata.Retry.Backoff = 2 * time.Second
-	cfg.Metadata.Retry.Backoff = 0
-	cfg.Metadata.RefreshFrequency = 0
-
 	// cfg.ChannelBufferSize = 1024
-	cfg.ChannelBufferSize = 1
 
 	return cfg
 }
