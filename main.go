@@ -17,6 +17,8 @@ import (
 	"github.com/larskluge/babl/shared"
 )
 
+const clientID = "babl-server"
+
 type server struct{}
 
 var debug bool
@@ -42,11 +44,11 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	module := shared.NewModule(moduleName, debug)
 
 	brokers := strings.Split(kafkaBrokers, ",")
-	client := kafka.NewClient(brokers, "babl-server", debug)
-	clientgroup := kafka.NewClientGroup(brokers, "babl-server", debug)
+	client := kafka.NewClient(brokers, clientID, debug)
+	clientgroup := kafka.NewClientGroup(brokers, clientID, debug)
 	defer client.Close()
 	defer clientgroup.Close()
-	producer := kafka.NewProducer(client)
+	producer := kafka.NewProducer(brokers, clientID+".producer")
 	defer func() {
 		log.Infof("Producer: Close Producer")
 		err := producer.Close()

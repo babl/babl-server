@@ -9,15 +9,15 @@ import (
 )
 
 // NewProducer create a new Producer object
-func NewProducer(client sarama.Client) sarama.SyncProducer {
-	producer, err := sarama.NewSyncProducerFromClient(client)
+func NewProducer(brokers []string, clientID string) sarama.SyncProducer {
+	// producer, err := sarama.NewSyncProducerFromClient(client) // for unknown reason, if a producer uses an existing client, the producing messages is 10x slower
+	producer, err := sarama.NewSyncProducer(brokers, config(clientID))
 	check(err)
 	return producer
 }
 
 // SendMessage send message to sarama.Producer
 func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) {
-	start := time.Now()
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(value),
@@ -35,6 +35,7 @@ func SendMessage(producer sarama.SyncProducer, key, topic string, value []byte) 
 		partition, offset, err = producer.SendMessage(msg)
 		return err
 	}
+	start := time.Now()
 	err = backoff.Retry(fn, backoff.NewExponentialBackOff())
 	check(err)
 	elapsed := float64(time.Since(start).Seconds() * 1000)
