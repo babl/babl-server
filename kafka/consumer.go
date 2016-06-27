@@ -12,10 +12,10 @@ type ConsumerData struct {
 }
 
 // Consume Kafka Sarama Consumer
-func Consume(client sarama.Client, topic string, ch chan ConsumerData) {
+func Consume(client *sarama.Client, topic string, ch chan ConsumerData) {
 	log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": "newest"}).Info("Consuming")
 
-	consumer, err := sarama.NewConsumerFromClient(client)
+	consumer, err := sarama.NewConsumerFromClient(*client)
 	check(err)
 	defer consumer.Close()
 

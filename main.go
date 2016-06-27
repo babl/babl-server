@@ -46,12 +46,13 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	brokers := strings.Split(kafkaBrokers, ",")
 	client := kafka.NewClient(brokers, clientID, debug)
 	clientgroup := kafka.NewClientGroup(brokers, clientID, debug)
-	defer client.Close()
-	defer clientgroup.Close()
+	defer (*client).Close()
+	defer (*clientgroup).Close()
+
 	producer := kafka.NewProducer(brokers, clientID+".producer")
 	defer func() {
 		log.Infof("Producer: Close Producer")
-		err := producer.Close()
+		err := (*producer).Close()
 		check(err)
 	}()
 
@@ -63,7 +64,7 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	<-wait
 }
 
-func work(clientgroup *cluster.Client, producer sarama.SyncProducer, brokers string, topics []string) {
+func work(clientgroup *cluster.Client, producer *sarama.SyncProducer, brokers string, topics []string) {
 	ch := make(chan kafka.ConsumerData)
 	go kafka.ConsumeGroup(clientgroup, topics, ch)
 
@@ -85,13 +86,13 @@ func work(clientgroup *cluster.Client, producer sarama.SyncProducer, brokers str
 		host := data.Key[:n]
 		skey := data.Key[n+1:]
 		stopic := "supervisor." + host
-		kafka.SendMessage(producer, skey, stopic, msg)
+		kafka.SendMessage(producer, skey, stopic, &msg)
 	}
 }
 
-func registerModule(producer sarama.SyncProducer, mod string) {
-	now := time.Now().UTC().String()
-	kafka.SendMessage(producer, mod, "modules", []byte(now))
+func registerModule(producer *sarama.SyncProducer, mod string) {
+	now := []byte(time.Now().UTC().String())
+	kafka.SendMessage(producer, mod, "modules", &now)
 }
 
 func check(err error) {
