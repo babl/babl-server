@@ -47,7 +47,8 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	client := kafka.NewClient(brokers, clientID, debug)
 	clientgroup := kafka.NewClientGroup(brokers, clientID, debug)
 	defer (*client).Close()
-	defer clientgroup.Close()
+	defer (*clientgroup).Close()
+
 	producer := kafka.NewProducer(brokers, clientID+".producer")
 	defer func() {
 		log.Infof("Producer: Close Producer")
