@@ -46,7 +46,7 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	brokers := strings.Split(kafkaBrokers, ",")
 	client := kafka.NewClient(brokers, clientID, debug)
 	clientgroup := kafka.NewClientGroup(brokers, clientID, debug)
-	defer client.Close()
+	defer (*client).Close()
 	defer clientgroup.Close()
 	producer := kafka.NewProducer(brokers, clientID+".producer")
 	defer func() {

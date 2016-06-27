@@ -10,13 +10,13 @@ import (
 )
 
 // NewClient Sarama client connection object
-func NewClient(brokers []string, clientID string, debug bool) sarama.Client {
+func NewClient(brokers []string, clientID string, debug bool) *sarama.Client {
 	setSaramaLogger(debug)
 
 	cfg := config(clientID)
 	client, err := sarama.NewClient(brokers, cfg)
 	check(err)
-	return client
+	return &client
 }
 
 // NewClientGroup Sarama/Cluster client connection object
