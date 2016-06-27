@@ -17,10 +17,10 @@ func NewProducer(brokers []string, clientID string) *sarama.SyncProducer {
 }
 
 // SendMessage send message to sarama.Producer
-func SendMessage(producer *sarama.SyncProducer, key, topic string, value []byte) {
+func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte) {
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
-		Value: sarama.ByteEncoder(value),
+		Value: sarama.ByteEncoder(*value),
 	}
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)

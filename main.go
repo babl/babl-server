@@ -86,13 +86,13 @@ func work(clientgroup *cluster.Client, producer *sarama.SyncProducer, brokers st
 		host := data.Key[:n]
 		skey := data.Key[n+1:]
 		stopic := "supervisor." + host
-		kafka.SendMessage(producer, skey, stopic, msg)
+		kafka.SendMessage(producer, skey, stopic, &msg)
 	}
 }
 
 func registerModule(producer *sarama.SyncProducer, mod string) {
-	now := time.Now().UTC().String()
-	kafka.SendMessage(producer, mod, "modules", []byte(now))
+	now := []byte(time.Now().UTC().String())
+	kafka.SendMessage(producer, mod, "modules", &now)
 }
 
 func check(err error) {
