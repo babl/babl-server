@@ -2,12 +2,8 @@ package main
 
 import (
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
-
-	"gopkg.in/bsm/sarama-cluster.v2"
 
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
@@ -15,11 +11,10 @@ import (
 	"github.com/larskluge/babl-server/kafka"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 	"github.com/larskluge/babl/shared"
+	"gopkg.in/bsm/sarama-cluster.v2"
 )
 
 const clientID = "babl-server"
-
-type server struct{}
 
 var debug bool
 var command string
@@ -45,8 +40,8 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 
 	brokers := strings.Split(kafkaBrokers, ",")
 	client := kafka.NewClient(brokers, clientID, debug)
-	clientgroup := kafka.NewClientGroup(brokers, clientID, debug)
 	defer (*client).Close()
+	clientgroup := kafka.NewClientGroup(brokers, clientID, debug)
 	defer (*clientgroup).Close()
 
 	producer := kafka.NewProducer(brokers, clientID+".producer")
@@ -59,9 +54,7 @@ func run(moduleName, cmd, address, kafkaBrokers string, dbg bool) {
 	go registerModule(producer, moduleName)
 	go work(clientgroup, producer, kafkaBrokers, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 
-	wait := make(chan os.Signal, 1)
-	signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
-	<-wait
+	startGrpcServer(address, module)
 }
 
 func work(clientgroup *cluster.Client, producer *sarama.SyncProducer, brokers string, topics []string) {
@@ -74,13 +67,26 @@ func work(clientgroup *cluster.Client, producer *sarama.SyncProducer, brokers st
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
 
-		in := &pbm.BinRequest{}
-		err := proto.Unmarshal(data.Value, in)
-		check(err)
-		out, err := IO(in)
-		check(err)
-		msg, err := proto.Marshal(out)
-		check(err)
+		var msg []byte
+		method := SplitLast(data.Topic, ".")
+		switch method {
+		case "IO":
+			in := &pbm.BinRequest{}
+			err := proto.Unmarshal(data.Value, in)
+			check(err)
+			out, err := IO(in)
+			check(err)
+			msg, err = proto.Marshal(out)
+			check(err)
+		case "Ping":
+			in := &pbm.Empty{}
+			err := proto.Unmarshal(data.Value, in)
+			check(err)
+			out, err := Ping(in)
+			check(err)
+			msg, err = proto.Marshal(out)
+			check(err)
+		}
 
 		n := strings.LastIndex(data.Key, ".")
 		host := data.Key[:n]
