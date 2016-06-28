@@ -13,7 +13,6 @@ import (
 	pbm "github.com/larskluge/babl/protobuf/messages"
 )
 
-// IO actions IO()
 func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 	start := time.Now()
 
@@ -105,5 +104,11 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		l.Error("call")
 	}
 
+	return &res, nil
+}
+
+func Ping(in *pbm.Empty) (*pbm.Pong, error) {
+	log.Info("ping")
+	res := pbm.Pong{Val: "pong"}
 	return &res, nil
 }
