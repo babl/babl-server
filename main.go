@@ -94,9 +94,3 @@ func registerModule(producer *sarama.SyncProducer, mod string) {
 	now := []byte(time.Now().UTC().String())
 	kafka.SendMessage(producer, mod, "modules", &now)
 }
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
