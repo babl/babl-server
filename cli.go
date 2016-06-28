@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli"
 )
@@ -52,7 +53,7 @@ func defaultAction(c *cli.Context) error {
 	} else {
 		command = c.String("cmd")
 		address := fmt.Sprintf(":%d", c.Int("port"))
-		brokers := c.String("kafka-brokers")
+		brokers := strings.Split(c.String("kafka-brokers"), ",")
 		debug := c.GlobalBool("debug")
 		run(module, command, address, brokers, debug)
 	}
