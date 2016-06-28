@@ -7,6 +7,7 @@ import (
 
 // ConsumerData struct used by Consume() and ConsumeGroup()
 type ConsumerData struct {
+	Topic string
 	Key   string
 	Value []byte
 }
