@@ -32,9 +32,9 @@ func configureCli() (app *cli.App) {
 			Value:  4444,
 		},
 		cli.StringFlag{
-			Name:  "kafka-brokers, kb",
-			Usage: "Comma separated list of kafka brokers",
-			Value: "127.0.0.1:9092",
+			Name:   "kafka-brokers, kb",
+			Usage:  "Comma separated list of kafka brokers",
+			EnvVar: "BABL_KAFKA_BROKERS",
 		},
 		cli.BoolFlag{
 			Name:   "debug",
@@ -53,8 +53,14 @@ func defaultAction(c *cli.Context) error {
 	} else {
 		command = c.String("cmd")
 		address := fmt.Sprintf(":%d", c.Int("port"))
-		brokers := strings.Split(c.String("kafka-brokers"), ",")
 		debug := c.GlobalBool("debug")
+
+		kb := c.String("kafka-brokers")
+		brokers := []string{}
+		if kb != "" {
+			brokers = strings.Split(kb, ",")
+		}
+
 		run(module, command, address, brokers, debug)
 	}
 	return nil

@@ -24,26 +24,28 @@ func main() {
 func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 	debug = dbg
 	command = cmd
-
 	if !shared.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
-
-	log.Warn("Start module")
 	module := shared.NewModule(moduleName, debug)
 
-	clientgroup := kafka.NewClientGroup(kafkaBrokers, clientID, debug)
-	defer (*clientgroup).Close()
+	if len(kafkaBrokers) == 0 {
+		log.Warn("Start module with GRPC access only")
+	} else {
+		log.Warn("Start module with GRPC access & Kafka support")
+		clientgroup := kafka.NewClientGroup(kafkaBrokers, clientID, debug)
+		defer (*clientgroup).Close()
 
-	producer := kafka.NewProducer(kafkaBrokers, clientID+".producer")
-	defer func() {
-		log.Infof("Producer: Close Producer")
-		err := (*producer).Close()
-		check(err)
-	}()
+		producer := kafka.NewProducer(kafkaBrokers, clientID+".producer")
+		defer func() {
+			log.Infof("Producer: Close Producer")
+			err := (*producer).Close()
+			check(err)
+		}()
 
-	go registerModule(producer, moduleName)
-	go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+		go registerModule(producer, moduleName)
+		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+	}
 
 	startGrpcServer(address, module)
 }
