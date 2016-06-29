@@ -13,7 +13,7 @@ type ConsumerData struct {
 }
 
 // Consume Kafka Sarama Consumer
-func Consume(client *sarama.Client, topic string, ch chan ConsumerData) {
+func Consume(client *sarama.Client, topic string, ch chan *ConsumerData) {
 	log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": "newest"}).Info("Consuming")
 
 	consumer, err := sarama.NewConsumerFromClient(*client)
@@ -27,7 +27,7 @@ func Consume(client *sarama.Client, topic string, ch chan ConsumerData) {
 	for msg := range pc.Messages() {
 		data := ConsumerData{Key: string(msg.Key), Value: msg.Value}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Message Received")
-		ch <- data
+		ch <- &data
 	}
 	log.Println("Consumer: Done consuming topic", topic)
 }

@@ -18,7 +18,7 @@ func registerModule(producer *sarama.SyncProducer, mod string) {
 }
 
 func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, topics []string) {
-	ch := make(chan kafka.ConsumerData)
+	ch := make(chan *kafka.ConsumerData)
 	go kafka.ConsumeGroup(clientgroup, topics, ch)
 
 	for {
