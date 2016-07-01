@@ -27,7 +27,8 @@ func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 	if !shared.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
-	module := shared.NewModule(moduleName, debug)
+	module := shared.NewModule(moduleName)
+	module.SetDebug(debug)
 
 	if len(kafkaBrokers) == 0 {
 		log.Warn("Start module with GRPC access only")
