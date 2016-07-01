@@ -30,10 +30,9 @@ func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 	module := shared.NewModule(moduleName)
 	module.SetDebug(debug)
 
-	if len(kafkaBrokers) == 0 {
-		log.Warn("Start module with GRPC access only")
-	} else {
-		log.Warn("Start module with GRPC access & Kafka support")
+	interfaces := "GRPC"
+	if len(kafkaBrokers) > 0 {
+		interfaces += ",Kafka"
 		clientgroup := kafka.NewClientGroup(kafkaBrokers, clientID, debug)
 		defer (*clientgroup).Close()
 
@@ -48,5 +47,6 @@ func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 	}
 
+	log.WithFields(log.Fields{"version": Version, "interfaces": interfaces}).Warn("Start module")
 	startGrpcServer(address, module)
 }

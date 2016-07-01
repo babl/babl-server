@@ -8,10 +8,12 @@ import (
 	"github.com/urfave/cli"
 )
 
+var Version = "0.4.1"
+
 func configureCli() (app *cli.App) {
 	app = cli.NewApp()
 	app.Usage = "Server for a Babl Module"
-	app.Version = "0.4.0"
+	app.Version = Version
 	app.Action = defaultAction
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
