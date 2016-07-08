@@ -27,6 +27,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
 
+		async := false
 		var msg []byte
 		method := SplitLast(data.Topic, ".")
 		switch method {
@@ -34,6 +35,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			in := &pbm.BinRequest{}
 			err := proto.Unmarshal(data.Value, in)
 			check(err)
+			_, async = in.Env["BABL_ASYNC"]
 			out, err := IO(in)
 			check(err)
 			msg, err = proto.Marshal(out)
@@ -48,10 +50,12 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			check(err)
 		}
 
-		n := strings.LastIndex(data.Key, ".")
-		host := data.Key[:n]
-		skey := data.Key[n+1:]
-		stopic := "supervisor." + host
-		kafka.SendMessage(producer, skey, stopic, &msg)
+		if !async {
+			n := strings.LastIndex(data.Key, ".")
+			host := data.Key[:n]
+			skey := data.Key[n+1:]
+			stopic := "supervisor." + host
+			kafka.SendMessage(producer, skey, stopic, &msg)
+		}
 	}
 }
