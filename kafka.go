@@ -36,6 +36,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			err := proto.Unmarshal(data.Value, in)
 			check(err)
 			_, async = in.Env["BABL_ASYNC"]
+			delete(in.Env, "BABL_ASYNC") // worker needs to process job synchronously
 			out, err := IO(in)
 			check(err)
 			msg, err = proto.Marshal(out)
@@ -57,5 +58,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			stopic := "supervisor." + host
 			kafka.SendMessage(producer, skey, stopic, &msg)
 		}
+
+		data.Processed <- true
 	}
 }

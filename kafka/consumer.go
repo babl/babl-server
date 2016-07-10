@@ -7,9 +7,10 @@ import (
 
 // ConsumerData struct used by Consume() and ConsumeGroup()
 type ConsumerData struct {
-	Topic string
-	Key   string
-	Value []byte
+	Topic     string
+	Key       string
+	Value     []byte
+	Processed chan bool
 }
 
 // Consume Kafka Sarama Consumer
@@ -25,9 +26,10 @@ func Consume(client *sarama.Client, topic string, ch chan *ConsumerData) {
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Message Received")
 		ch <- &data
+		<-data.Processed
 	}
 	log.Println("Consumer: Done consuming topic", topic)
 }

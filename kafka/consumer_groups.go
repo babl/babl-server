@@ -21,9 +21,10 @@ func ConsumeGroup(client *cluster.Client, topics []string, ch chan *ConsumerData
 	go consumeNotifications(consumer)
 
 	for msg := range consumer.Messages() {
-		data := ConsumerData{Topic: msg.Topic, Key: string(msg.Key), Value: msg.Value}
+		data := ConsumerData{Topic: msg.Topic, Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
 		log.WithFields(log.Fields{"topics": topics, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Group Message Received")
 		ch <- &data
+		<-data.Processed
 		consumer.MarkOffset(msg, "")
 	}
 	log.Println("ConsumerGroups: Done consuming topic/groups", topics)
