@@ -39,7 +39,6 @@ func ConsumeGroupName(topics []string) string {
 func consumeErrors(consumer *cluster.Consumer) {
 	for err := range consumer.Errors() {
 		log.WithFields(log.Fields{"error": err.Error()}).Info("Group Message Error")
-		check(err)
 	}
 }
 
