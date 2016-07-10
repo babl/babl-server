@@ -8,6 +8,7 @@ import (
 	"github.com/larskluge/babl/shared"
 )
 
+const Version = "0.4.3"
 const clientID = "babl-server"
 
 var debug bool
