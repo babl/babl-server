@@ -19,7 +19,7 @@ function error_exit
 
 
 # test grpc interface
-res=$(echo foo | babl --host localhost --port 4444 larskluge/rev)
+res=$(echo foo | babl -c localhost:4444 larskluge/rev)
 if [ "$res" != "oof" ]; then
   error_exit "Server did not reverse result as expected (foo), but returned '$res'; aborting."
 fi
