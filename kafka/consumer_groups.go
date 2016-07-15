@@ -38,12 +38,12 @@ func ConsumeGroupName(topics []string) string {
 
 func consumeErrors(consumer *cluster.Consumer) {
 	for err := range consumer.Errors() {
-		log.WithFields(log.Fields{"error": err.Error()}).Info("Group Message Error")
+		log.WithFields(log.Fields{"error": err.Error()}).Warn("ConsumeGroup: Error")
 	}
 }
 
 func consumeNotifications(consumer *cluster.Consumer) {
 	for note := range consumer.Notifications() {
-		log.WithFields(log.Fields{"rebalanced": note}).Info("Group Message Rebalanced Notification")
+		log.WithFields(log.Fields{"rebalanced": note}).Info("ConsumeGroup: Notification")
 	}
 }
