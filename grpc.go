@@ -7,9 +7,9 @@ import (
 	"net"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/larskluge/babl/bablmodule"
 	pb "github.com/larskluge/babl/protobuf"
 	pbm "github.com/larskluge/babl/protobuf/messages"
-	"github.com/larskluge/babl/shared"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -17,7 +17,7 @@ import (
 
 type server struct{}
 
-func startGrpcServer(address string, module *shared.Module) {
+func startGrpcServer(address string, module *bablmodule.Module) {
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err, "address": address}).Fatal("Failed to listen at port")

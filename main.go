@@ -5,7 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/larskluge/babl-server/kafka"
-	"github.com/larskluge/babl/shared"
+	"github.com/larskluge/babl/bablmodule"
 )
 
 const Version = "0.4.3"
@@ -25,10 +25,10 @@ func main() {
 func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 	debug = dbg
 	command = cmd
-	if !shared.CheckModuleName(moduleName) {
+	if !bablmodule.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
-	module := shared.NewModule(moduleName)
+	module := bablmodule.New(moduleName)
 	module.SetDebug(debug)
 
 	interfaces := "GRPC"
