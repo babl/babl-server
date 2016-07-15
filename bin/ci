@@ -33,4 +33,4 @@ cat babl-server_darwin_amd64 | gzip | babl larskluge/s3:babl -e FILE=/babl-serve
 
 ./babl-server -version | babl larskluge/s3:babl -e FILE=/babl-server-latest-version.txt -e CONTENTTYPE=text/plain
 
-rm -f babl-server_linux_amd64
+rm -f babl-server_linux_amd64 babl-server_darwin_amd64
