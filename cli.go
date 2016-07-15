@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/larskluge/babl/bablutils"
 	"github.com/urfave/cli"
 )
 
@@ -40,6 +41,16 @@ func configureCli() (app *cli.App) {
 			Name:   "debug",
 			Usage:  "Enable debug mode & verbose logging",
 			EnvVar: "BABL_DEBUG",
+		},
+	}
+	app.Commands = []cli.Command{
+		{
+			Name:  "upgrade",
+			Usage: "Upgrades the server to the latest available version",
+			Action: func(_ *cli.Context) {
+				m := bablutils.NewUpgrade("babl-server")
+				m.Upgrade(Version)
+			},
 		},
 	}
 	return
