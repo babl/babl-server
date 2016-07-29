@@ -35,6 +35,7 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		}
 		cmd.Env = append(cmd.Env, env...)
 		cmd.Env = append(cmd.Env, "BABL_VARS="+strings.Join(vars, ","))
+		audit := in.Env["AUDIT"]
 
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
@@ -89,6 +90,7 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		elapsed := float64(time.Since(start).Seconds() * 1000)
 
 		fields := log.Fields{
+			"audit":        audit,
 			"stdin_bytes":  len(in.Stdin),
 			"stdout_bytes": len(res.Stdout),
 			"stderr_bytes": len(res.Stderr),

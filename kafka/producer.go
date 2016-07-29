@@ -25,7 +25,7 @@ func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-
+	audit := SplitGetByIndex(key, ".", 1)
 	var partition int32
 	var offset int64
 	var err error
@@ -35,11 +35,11 @@ func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte
 		return err
 	}
 	notify := func(err error, duration time.Duration) {
-		log.WithFields(log.Fields{"error": err, "duration": duration, "topic": topic}).Warn("Producer: send message error, retrying..")
+		log.WithFields(log.Fields{"error": err, "duration": duration, "topic": topic, "audit": audit}).Warn("Producer: send message error, retrying..")
 	}
 	start := time.Now()
 	err = backoff.RetryNotify(fn, backoff.NewExponentialBackOff(), notify)
 	check(err)
 	elapsed := float64(time.Since(start).Seconds() * 1000)
-	log.WithFields(log.Fields{"topic": topic, "key": key, "partition": partition, "offset": offset, "duration_ms": elapsed}).Info("Producer: message sent")
+	log.WithFields(log.Fields{"topic": topic, "key": key, "partition": partition, "offset": offset, "duration_ms": elapsed, "audit": audit}).Info("Producer: message sent")
 }

@@ -27,6 +27,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
 
+		audit := SplitGetByIndex(data.Key, ".", 1)
 		async := false
 		var msg []byte
 		method := SplitLast(data.Topic, ".")
@@ -37,6 +38,10 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			check(err)
 			_, async = in.Env["BABL_ASYNC"]
 			delete(in.Env, "BABL_ASYNC") // worker needs to process job synchronously
+			if len(in.Env) == 0 {
+				in.Env = map[string]string{}
+			}
+			in.Env["AUDIT"] = audit
 			out, err := IO(in)
 			check(err)
 			msg, err = proto.Marshal(out)

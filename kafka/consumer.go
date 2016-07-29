@@ -27,7 +27,7 @@ func Consume(client *sarama.Client, topic string, ch chan *ConsumerData) {
 
 	for msg := range pc.Messages() {
 		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
-		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Message Received")
+		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "audit": data.Key}).Info("New Message Received")
 		ch <- &data
 		<-data.Processed
 	}
