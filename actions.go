@@ -28,6 +28,9 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		env := os.Environ()
 		cmd.Env = []string{} // {"FOO=BAR"}
 
+		audit := in.Env["AUDIT"]
+		delete(in.Env, "AUDIT")
+
 		vars := []string{}
 		for k, v := range in.Env {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
@@ -35,7 +38,6 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		}
 		cmd.Env = append(cmd.Env, env...)
 		cmd.Env = append(cmd.Env, "BABL_VARS="+strings.Join(vars, ","))
-		audit := in.Env["AUDIT"]
 
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
