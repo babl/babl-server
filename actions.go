@@ -89,15 +89,13 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		elapsed := float64(time.Since(start).Seconds() * 1000)
 
 		fields := log.Fields{
-			"stdin":       len(in.Stdin),
-			"stdout":      len(res.Stdout),
-			"stderr":      len(res.Stderr),
-			"exitcode":    res.Exitcode,
-			"status":      status,
-			"duration_ms": elapsed,
-		}
-		if status != 200 {
-			fields["error"] = string(res.Stderr)
+			"stdin_bytes":  len(in.Stdin),
+			"stdout_bytes": len(res.Stdout),
+			"stderr_bytes": len(res.Stderr),
+			"stderr":       string(res.Stderr),
+			"exitcode":     res.Exitcode,
+			"status":       status,
+			"duration_ms":  elapsed,
 		}
 		if async {
 			fields["mode"] = "async"
