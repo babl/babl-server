@@ -5,10 +5,11 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/larskluge/babl-server/kafka"
+	. "github.com/larskluge/babl-server/utils"
 	"github.com/larskluge/babl/bablmodule"
 )
 
-const Version = "0.5.2"
+const Version = "0.5.3"
 const clientID = "babl-server"
 
 var debug bool
@@ -41,7 +42,7 @@ func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 		defer func() {
 			log.Infof("Producer: Close Producer")
 			err := (*producer).Close()
-			check(err)
+			Check(err)
 		}()
 
 		go registerModule(producer, moduleName)

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	. "github.com/larskluge/babl-server/utils"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 
@@ -14,7 +15,7 @@ func ConsumeGroup(client *cluster.Client, topics []string, ch chan *ConsumerData
 	log.WithFields(log.Fields{"topics": topics, "group": group, "offset": "newest"}).Info("Consuming Groups")
 
 	consumer, err := cluster.NewConsumerFromClient(client, group, topics)
-	check(err)
+	Check(err)
 	defer consumer.Close()
 
 	go consumeErrors(consumer)
@@ -22,7 +23,8 @@ func ConsumeGroup(client *cluster.Client, topics []string, ch chan *ConsumerData
 
 	for msg := range consumer.Messages() {
 		data := ConsumerData{Topic: msg.Topic, Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
-		log.WithFields(log.Fields{"topics": topics, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value)}).Info("New Group Message Received")
+		rid := SplitGetByIndex(data.Key, ".", 1)
+		log.WithFields(log.Fields{"topics": topics, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": rid}).Info("New Group Message Received")
 		ch <- &data
 		<-data.Processed
 		consumer.MarkOffset(msg, "")
