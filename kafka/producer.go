@@ -6,13 +6,14 @@ import (
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/cenk/backoff"
+	. "github.com/larskluge/babl-server/utils"
 )
 
 // NewProducer create a new Producer object
 func NewProducer(brokers []string, clientID string) *sarama.SyncProducer {
 	// producer, err := sarama.NewSyncProducerFromClient(client) // for unknown reason, if a producer uses an existing client, the producing messages is 10x slower
 	producer, err := sarama.NewSyncProducer(brokers, config(clientID))
-	check(err)
+	Check(err)
 	return &producer
 }
 
@@ -39,7 +40,7 @@ func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte
 	}
 	start := time.Now()
 	err = backoff.RetryNotify(fn, backoff.NewExponentialBackOff(), notify)
-	check(err)
+	Check(err)
 	elapsed := float64(time.Since(start).Seconds() * 1000)
 	log.WithFields(log.Fields{"topic": topic, "key": key, "partition": partition, "offset": offset, "duration_ms": elapsed, "audit": audit}).Info("Producer: message sent")
 }

@@ -3,6 +3,7 @@ package kafka
 import (
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
+	. "github.com/larskluge/babl-server/utils"
 )
 
 // ConsumerData struct used by Consume() and ConsumeGroup()
@@ -18,11 +19,11 @@ func Consume(client *sarama.Client, topic string, ch chan *ConsumerData) {
 	log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": "newest"}).Info("Consuming")
 
 	consumer, err := sarama.NewConsumerFromClient(*client)
-	check(err)
+	Check(err)
 	defer consumer.Close()
 
 	pc, err := consumer.ConsumePartition(topic, 0, sarama.OffsetNewest)
-	check(err)
+	Check(err)
 	defer pc.Close()
 
 	for msg := range pc.Messages() {

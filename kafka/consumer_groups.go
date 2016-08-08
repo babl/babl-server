@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	. "github.com/larskluge/babl-server/utils"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 
@@ -14,7 +15,7 @@ func ConsumeGroup(client *cluster.Client, topics []string, ch chan *ConsumerData
 	log.WithFields(log.Fields{"topics": topics, "group": group, "offset": "newest"}).Info("Consuming Groups")
 
 	consumer, err := cluster.NewConsumerFromClient(client, group, topics)
-	check(err)
+	Check(err)
 	defer consumer.Close()
 
 	go consumeErrors(consumer)

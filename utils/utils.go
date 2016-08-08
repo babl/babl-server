@@ -1,6 +1,11 @@
-package kafka
+package utils
 
 import "strings"
+
+func SplitLast(s, sep string) string {
+	n := strings.LastIndex(s, sep)
+	return s[n+1:]
+}
 
 func SplitGetByIndex(s, sep string, idx int) string {
 	res := s
@@ -10,7 +15,7 @@ func SplitGetByIndex(s, sep string, idx int) string {
 	return res
 }
 
-func check(err error) {
+func Check(err error) {
 	if err != nil {
 		panic(err)
 	}

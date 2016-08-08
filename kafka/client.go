@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Shopify/sarama"
+	. "github.com/larskluge/babl-server/utils"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 
@@ -15,7 +16,7 @@ func NewClient(brokers []string, clientID string, debug bool) *sarama.Client {
 
 	cfg := config(clientID)
 	client, err := sarama.NewClient(brokers, cfg)
-	check(err)
+	Check(err)
 	return &client
 }
 
@@ -25,7 +26,7 @@ func NewClientGroup(brokers []string, clientID string, debug bool) *cluster.Clie
 
 	cfg := clusterConfig(clientID)
 	client, err := cluster.NewClient(brokers, cfg)
-	check(err)
+	Check(err)
 	return client
 }
 

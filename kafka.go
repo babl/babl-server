@@ -8,6 +8,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/larskluge/babl-server/kafka"
+	. "github.com/larskluge/babl-server/utils"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
@@ -35,7 +36,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		case "IO":
 			in := &pbm.BinRequest{}
 			err := proto.Unmarshal(data.Value, in)
-			check(err)
+			Check(err)
 			_, async = in.Env["BABL_ASYNC"]
 			delete(in.Env, "BABL_ASYNC") // worker needs to process job synchronously
 			if len(in.Env) == 0 {
@@ -43,17 +44,17 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			}
 			in.Env["AUDIT"] = audit
 			out, err := IO(in)
-			check(err)
+			Check(err)
 			msg, err = proto.Marshal(out)
-			check(err)
+			Check(err)
 		case "Ping":
 			in := &pbm.Empty{}
 			err := proto.Unmarshal(data.Value, in)
-			check(err)
+			Check(err)
 			out, err := Ping(in)
-			check(err)
+			Check(err)
 			msg, err = proto.Marshal(out)
-			check(err)
+			Check(err)
 		}
 
 		if !async {
