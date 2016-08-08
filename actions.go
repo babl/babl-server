@@ -28,9 +28,6 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		env := os.Environ()
 		cmd.Env = []string{} // {"FOO=BAR"}
 
-		audit := in.Env["AUDIT"]
-		delete(in.Env, "AUDIT")
-
 		vars := []string{}
 		for k, v := range in.Env {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
@@ -92,7 +89,7 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		elapsed := float64(time.Since(start).Seconds() * 1000)
 
 		fields := log.Fields{
-			"audit":        audit,
+			"rid":          in.Env["BABL_RID"],
 			"stdin_bytes":  len(in.Stdin),
 			"stdout_bytes": len(res.Stdout),
 			"stderr_bytes": len(res.Stderr),

@@ -28,7 +28,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
 
-		audit := SplitGetByIndex(data.Key, ".", 1)
+		rid := SplitGetByIndex(data.Key, ".", 1)
 		async := false
 		var msg []byte
 		method := SplitLast(data.Topic, ".")
@@ -42,7 +42,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			if len(in.Env) == 0 {
 				in.Env = map[string]string{}
 			}
-			in.Env["AUDIT"] = audit
+			in.Env["BABL_RID"] = rid
 			out, err := IO(in)
 			Check(err)
 			msg, err = proto.Marshal(out)

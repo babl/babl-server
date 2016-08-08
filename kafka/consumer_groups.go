@@ -23,8 +23,8 @@ func ConsumeGroup(client *cluster.Client, topics []string, ch chan *ConsumerData
 
 	for msg := range consumer.Messages() {
 		data := ConsumerData{Topic: msg.Topic, Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
-		audit := SplitGetByIndex(data.Key, ".", 1)
-		log.WithFields(log.Fields{"topics": topics, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "audit": audit}).Info("New Group Message Received")
+		rid := SplitGetByIndex(data.Key, ".", 1)
+		log.WithFields(log.Fields{"topics": topics, "group": group, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": rid}).Info("New Group Message Received")
 		ch <- &data
 		<-data.Processed
 		consumer.MarkOffset(msg, "")
