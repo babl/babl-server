@@ -14,15 +14,19 @@ type ConsumerData struct {
 	Processed chan bool
 }
 
+type ConsumerOptions struct {
+	Offset int64
+}
+
 // Consume Kafka Sarama Consumer
-func Consume(client *sarama.Client, topic string, ch chan *ConsumerData) {
+func Consume(client *sarama.Client, topic string, ch chan *ConsumerData, options ...ConsumerOptions) {
 	log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": "newest"}).Info("Consuming")
 
 	consumer, err := sarama.NewConsumerFromClient(*client)
 	Check(err)
 	defer consumer.Close()
 
-	pc, err := consumer.ConsumePartition(topic, 0, sarama.OffsetNewest)
+	pc, err := consumer.ConsumePartition(topic, 0, getOptionOffset(options))
 	Check(err)
 	defer pc.Close()
 
@@ -33,4 +37,12 @@ func Consume(client *sarama.Client, topic string, ch chan *ConsumerData) {
 		<-data.Processed
 	}
 	log.Println("Consumer: Done consuming topic", topic)
+}
+
+func getOptionOffset(options []ConsumerOptions) int64 {
+	offset := sarama.OffsetNewest
+	if len(options) > 0 {
+		offset = options[0].Offset
+	}
+	return offset
 }
