@@ -4,7 +4,6 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/cenk/backoff"
 	. "github.com/larskluge/babl-server/utils"
 	"gopkg.in/Shopify/sarama.v1.9.0"
 )
@@ -31,15 +30,8 @@ func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte
 	var offset int64
 	var err error
 
-	fn := func() error {
-		_, _, err = (*producer).SendMessage(msg)
-		return err
-	}
-	notify := func(err error, duration time.Duration) {
-		log.WithFields(log.Fields{"error": err, "duration": duration, "topic": topic, "rid": rid}).Warn("Producer: send message error, retrying..")
-	}
 	start := time.Now()
-	err = backoff.RetryNotify(fn, backoff.NewExponentialBackOff(), notify)
+	_, _, err = (*producer).SendMessage(msg)
 	Check(err)
 	elapsed := float64(time.Since(start).Seconds() * 1000)
 	log.WithFields(log.Fields{"topic": topic, "key": key, "partition": partition, "offset": offset, "duration_ms": elapsed, "rid": rid}).Info("Producer: message sent")
