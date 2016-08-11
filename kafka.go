@@ -4,12 +4,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/larskluge/babl-server/kafka"
 	. "github.com/larskluge/babl-server/utils"
 	pbm "github.com/larskluge/babl/protobuf/messages"
+	"gopkg.in/Shopify/sarama.v1.9.0"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 

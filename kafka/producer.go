@@ -3,10 +3,10 @@ package kafka
 import (
 	"time"
 
-	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	"github.com/cenk/backoff"
 	. "github.com/larskluge/babl-server/utils"
+	"gopkg.in/Shopify/sarama.v1.9.0"
 )
 
 // NewProducer create a new Producer object
