@@ -13,6 +13,7 @@ func config(clientID string) *sarama.Config {
 
 	cfg.Consumer.Return.Errors = true
 
+	cfg.Producer.Return.Errors = true
 	cfg.Producer.RequiredAcks = sarama.WaitForAll
 	cfg.Producer.Partitioner = sarama.NewRandomPartitioner
 
