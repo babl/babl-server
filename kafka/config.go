@@ -1,8 +1,8 @@
 package kafka
 
 import (
+	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
-	"gopkg.in/Shopify/sarama.v1.9.0"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 

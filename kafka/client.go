@@ -5,8 +5,8 @@ import (
 	stdlog "log"
 	"os"
 
+	"github.com/Shopify/sarama"
 	. "github.com/larskluge/babl-server/utils"
-	"gopkg.in/Shopify/sarama.v1.9.0"
 	"gopkg.in/bsm/sarama-cluster.v2"
 )
 

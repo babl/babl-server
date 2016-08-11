@@ -1,9 +1,9 @@
 package kafka
 
 import (
+	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
 	. "github.com/larskluge/babl-server/utils"
-	"gopkg.in/Shopify/sarama.v1.9.0"
 )
 
 // ConsumerData struct used by Consume() and ConsumeGroup()
