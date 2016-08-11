@@ -26,7 +26,7 @@ func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	rid := SplitGetByIndex(key, ".", 1)
+	rid := SplitLast(key, ".")
 	var partition int32
 	var offset int64
 	var err error

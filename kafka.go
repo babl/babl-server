@@ -28,7 +28,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
 
-		rid := SplitGetByIndex(data.Key, ".", 1)
+		rid := SplitLast(data.Key, ".")
 		async := false
 		var msg []byte
 		method := SplitLast(data.Topic, ".")
