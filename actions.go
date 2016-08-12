@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -53,13 +56,28 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 			log.WithFields(log.Fields{"error": err}).Error("cmd.Start")
 		}
 
+		var stderrBuf bytes.Buffer
+		stderrCopy := io.TeeReader(stderr, &stderrBuf)
+
+		go func() {
+			log.Warn("Start copying stderr to log")
+			in := bufio.NewScanner(stderrCopy)
+			for in.Scan() {
+				log.Warn(in.Text())
+			}
+			if err := in.Err(); err != nil {
+				log.Warn(err)
+			}
+			log.Warn("Done copying stderr to log")
+		}()
+
 		stdin.Write(in.Stdin)
 		stdin.Close()
 		res.Stdout, err = ioutil.ReadAll(stdout)
 		if err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("ioutil.ReadAll(stdout)")
 		}
-		res.Stderr, err = ioutil.ReadAll(stderr)
+		res.Stderr, err = ioutil.ReadAll(&stderrBuf)
 		if err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("ioutil.ReadAll(stderr)")
 		}
