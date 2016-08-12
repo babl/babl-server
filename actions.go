@@ -62,10 +62,10 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		go func() {
 			in := bufio.NewScanner(stderrCopy)
 			for in.Scan() {
-				log.Warn(in.Text())
+				log.Info(in.Text()) // TODO: forward with correct log level
 			}
 			if err := in.Err(); err != nil {
-				log.Warn(err)
+				log.WithError(err).Warn("Copy module exec stderr stream to logs failed")
 			}
 		}()
 
