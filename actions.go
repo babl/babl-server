@@ -60,7 +60,6 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		stderrCopy := io.TeeReader(stderr, &stderrBuf)
 
 		go func() {
-			log.Warn("Start copying stderr to log")
 			in := bufio.NewScanner(stderrCopy)
 			for in.Scan() {
 				log.Warn(in.Text())
@@ -68,7 +67,6 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 			if err := in.Err(); err != nil {
 				log.Warn(err)
 			}
-			log.Warn("Done copying stderr to log")
 		}()
 
 		stdin.Write(in.Stdin)
