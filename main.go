@@ -7,6 +7,7 @@ import (
 	"github.com/larskluge/babl-server/kafka"
 	. "github.com/larskluge/babl-server/utils"
 	"github.com/larskluge/babl/bablmodule"
+	"github.com/larskluge/babl/bablutils"
 )
 
 const Version = "0.5.3"
@@ -16,6 +17,7 @@ var debug bool
 var command string
 
 func main() {
+	bablutils.PrintPlainVersionAndExit(os.Args, Version)
 	log.SetOutput(os.Stderr)
 	log.SetFormatter(&log.JSONFormatter{})
 
