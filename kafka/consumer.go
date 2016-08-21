@@ -11,7 +11,7 @@ type ConsumerData struct {
 	Topic     string
 	Key       string
 	Value     []byte
-	Processed chan bool
+	Processed chan string
 }
 
 type ConsumerOptions struct {
@@ -31,7 +31,7 @@ func Consume(client *sarama.Client, topic string, ch chan *ConsumerData, options
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
 		ch <- &data
 		<-data.Processed
@@ -61,7 +61,7 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan bool, 1)}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
 		ch <- &data
 		<-data.Processed

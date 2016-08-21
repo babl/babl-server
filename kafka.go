@@ -30,6 +30,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 
 		rid := SplitLast(data.Key, ".")
 		async := false
+		res := "error"
 		var msg []byte
 		method := SplitLast(data.Topic, ".")
 		switch method {
@@ -45,6 +46,9 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			in.Env["BABL_RID"] = rid
 			out, err := IO(in)
 			Check(err)
+			if out.Exitcode == 0 {
+				res = "success"
+			}
 			msg, err = proto.Marshal(out)
 			Check(err)
 		case "Ping":
@@ -53,6 +57,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			Check(err)
 			out, err := Ping(in)
 			Check(err)
+			res = "success"
 			msg, err = proto.Marshal(out)
 			Check(err)
 		}
@@ -65,6 +70,6 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			kafka.SendMessage(producer, skey, stopic, &msg)
 		}
 
-		data.Processed <- true
+		data.Processed <- res
 	}
 }
