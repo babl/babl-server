@@ -10,7 +10,7 @@ import (
 	"github.com/larskluge/babl/bablutils"
 )
 
-const Version = "0.5.5"
+const Version = "0.5.6"
 const clientID = "babl-server"
 
 var debug bool
