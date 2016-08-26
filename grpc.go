@@ -32,6 +32,9 @@ func startGrpcServer(address string, module *bablmodule.Module) {
 	creds := credentials.NewServerTLSFromCert(&cert)
 	opts := []grpc.ServerOption{grpc.Creds(creds)}
 
+	maxMsgSize := 1024 * 1024 * 100 // 100 MB max message size
+	opts = append(opts, grpc.MaxMsgSize(maxMsgSize))
+
 	s := grpc.NewServer(opts...)
 	pb.RegisterBinaryServer((*module).GrpcServiceName(), s, &server{})
 	s.Serve(lis)
