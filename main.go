@@ -51,6 +51,6 @@ func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
 		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 	}
 
-	log.WithFields(log.Fields{"version": Version, "interfaces": interfaces}).Warn("Start module")
+	log.WithFields(log.Fields{"version": Version, "interfaces": interfaces, "debug": debug}).Warn("Start module")
 	startGrpcServer(address, module)
 }
