@@ -61,11 +61,10 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	pc, err2 := consumer.ConsumePartition(topic, partition, offset)
 	if err2 != nil && strings.Contains(err2.Error(), "offset is outside the range") {
 		data := ConsumerData{Key: string(""), Value: []byte(""), Processed: make(chan string, 1)}
-		log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": offset, "key": "", "value size": 0}).Warn("Kafka Topic/Partition offset is outside the range")
+		log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": offset, "key": "", "value size": 0}).Error("Kafka Topic/Partition offset is outside the range")
 		ch <- &data
 		<-data.Processed
 		close(ch)
-		pc.Close()
 		return
 	}
 	Check(err2)
