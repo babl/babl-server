@@ -57,6 +57,9 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	}
 
 	pc, err := consumer.ConsumePartition(topic, partition, offset)
+	if err != nil {
+		pc, err = consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
+	}
 	Check(err)
 	defer pc.Close()
 
