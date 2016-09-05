@@ -41,19 +41,19 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("cmd.StdinPipe")
+			log.WithError(err).Error("cmd.StdinPipe")
 		}
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("cmd.StdoutPipe")
+			log.WithError(err).Error("cmd.StdoutPipe")
 		}
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("cmd.StderrPipe")
+			log.WithError(err).Error("cmd.StderrPipe")
 		}
 		err = cmd.Start()
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("cmd.Start")
+			log.WithError(err).Error("cmd.Start")
 		}
 
 		var stderrBuf bytes.Buffer
@@ -73,11 +73,11 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		stdin.Close()
 		res.Stdout, err = ioutil.ReadAll(stdout)
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("ioutil.ReadAll(stdout)")
+			log.WithError(err).Error("ioutil.ReadAll(stdout)")
 		}
 		res.Stderr, err = ioutil.ReadAll(&stderrBuf)
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("ioutil.ReadAll(stderr)")
+			log.WithError(err).Error("ioutil.ReadAll(stderr)")
 		}
 
 		if err := cmd.Wait(); err != nil {
@@ -93,7 +93,7 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 					res.Exitcode = int32(status.ExitStatus())
 				}
 			} else {
-				log.WithFields(log.Fields{"error": err}).Error("cmd.Wait")
+				log.WithError(err).Error("cmd.Wait")
 			}
 		}
 
