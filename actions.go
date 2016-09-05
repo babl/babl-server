@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -39,6 +40,17 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		cmd.Env = append(cmd.Env, env...)
 		cmd.Env = append(cmd.Env, "BABL_VARS="+strings.Join(vars, ","))
 
+		payload := in.Stdin
+		if len(payload) <= 0 && in.PayloadUrl != "" {
+			log.WithFields(log.Fields{"payload_url": in.PayloadUrl}).Info("Downloading external payload")
+			var err error
+			payload, err = getPayload(in.PayloadUrl)
+			if err != nil {
+				log.WithError(err).Fatal("Payload download failed")
+			}
+			log.WithFields(log.Fields{"payload_size": len(payload)}).Info("Payload download successful")
+		}
+
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			log.WithError(err).Error("cmd.StdinPipe")
@@ -69,7 +81,7 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 			}
 		}()
 
-		stdin.Write(in.Stdin)
+		stdin.Write(payload)
 		stdin.Close()
 		res.Stdout, err = ioutil.ReadAll(stdout)
 		if err != nil {
@@ -106,7 +118,7 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 
 		fields := log.Fields{
 			"rid":          in.Env["BABL_RID"],
-			"stdin_bytes":  len(in.Stdin),
+			"stdin_bytes":  len(payload),
 			"stdout_bytes": len(res.Stdout),
 			"stderr_bytes": len(res.Stderr),
 			"stderr":       string(res.Stderr),
@@ -138,4 +150,13 @@ func Ping(in *pbm.Empty) (*pbm.Pong, error) {
 	log.Info("ping")
 	res := pbm.Pong{Val: "pong"}
 	return &res, nil
+}
+
+func getPayload(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
 }
