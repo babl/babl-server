@@ -44,7 +44,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 				in.Env = map[string]string{}
 			}
 			in.Env["BABL_RID"] = rid
-			out, err := IO(in)
+			out, err := IO(in, MaxKafkaMessageSize)
 			Check(err)
 			if out.Exitcode == 0 {
 				res = "success"

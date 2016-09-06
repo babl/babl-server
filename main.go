@@ -10,11 +10,19 @@ import (
 	"github.com/larskluge/babl/bablutils"
 )
 
-const Version = "0.6.0"
-const clientID = "babl-server"
+const (
+	Version  = "0.6.1"
+	clientID = "babl-server"
 
-var debug bool
-var command string
+	MaxKafkaMessageSize = 1024 * 512        // 512kb
+	MaxGrpcMessageSize  = 1024 * 1024 * 100 // 100mb
+	StorageEndpoint     = "babl.sh:4443"
+)
+
+var (
+	debug   bool
+	command string
+)
 
 func main() {
 	bablutils.PrintPlainVersionAndExit(os.Args, Version)

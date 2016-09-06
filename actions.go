@@ -14,10 +14,11 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/larskluge/babl-storage/uploader"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 )
 
-func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
+func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 	start := time.Now()
 	res := pbm.BinReply{Exitcode: 0}
 
@@ -87,6 +88,22 @@ func IO(in *pbm.BinRequest) (*pbm.BinReply, error) {
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stdout)")
 		}
+		if len(res.Stdout) > maxReplySize {
+			upload, err := uploader.New(StorageEndpoint, bytes.NewReader(res.Stdout))
+			if err != nil {
+				log.WithError(err).Error("uploader.New: store stdout externally failed")
+			}
+			log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Info("Store large payload externally")
+			go func(upload *uploader.Upload) {
+				success := upload.WaitForCompletion()
+				if !success {
+					log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Error("Large payload upload failed")
+				}
+			}(upload)
+			res.Stdout = []byte{}
+			res.PayloadUrl = upload.Url
+		}
+
 		res.Stderr, err = ioutil.ReadAll(&stderrBuf)
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stderr)")
