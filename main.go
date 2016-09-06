@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Version  = "0.6.2"
+	Version  = "0.6.3"
 	clientID = "babl-server"
 
 	MaxKafkaMessageSize = 1024 * 512        // 512kb
