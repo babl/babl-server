@@ -64,10 +64,6 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		if err != nil {
 			log.WithError(err).Error("cmd.StderrPipe")
 		}
-		err = cmd.Start()
-		if err != nil {
-			log.WithError(err).Error("cmd.Start")
-		}
 
 		var stderrBuf bytes.Buffer
 		stderrCopy := io.TeeReader(stderr, &stderrBuf)
@@ -82,28 +78,22 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			}
 		}()
 
-		stdin.Write(payload)
-		stdin.Close()
+		// write to stdin non-blocking so external process can start consuming data
+		// before buffer is full and everything blocks up
+		go func() {
+			stdin.Write(payload)
+			stdin.Close()
+		}()
+
+		err = cmd.Start()
+		if err != nil {
+			log.WithError(err).Error("cmd.Start")
+		}
+
 		res.Stdout, err = ioutil.ReadAll(stdout)
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stdout)")
 		}
-		if len(res.Stdout) > maxReplySize {
-			upload, err := uploader.New(StorageEndpoint, bytes.NewReader(res.Stdout))
-			if err != nil {
-				log.WithError(err).Error("uploader.New: store stdout externally failed")
-			}
-			log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Info("Store large payload externally")
-			go func(upload *uploader.Upload) {
-				success := upload.WaitForCompletion()
-				if !success {
-					log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Error("Large payload upload failed")
-				}
-			}(upload)
-			res.Stdout = []byte{}
-			res.PayloadUrl = upload.Url
-		}
-
 		res.Stderr, err = ioutil.ReadAll(&stderrBuf)
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stderr)")
@@ -124,6 +114,22 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			} else {
 				log.WithError(err).Error("cmd.Wait")
 			}
+		}
+
+		if len(res.Stdout) > maxReplySize {
+			upload, err := uploader.New(StorageEndpoint, bytes.NewReader(res.Stdout))
+			if err != nil {
+				log.WithError(err).Error("uploader.New: store stdout externally failed")
+			}
+			log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Info("Store large payload externally")
+			go func(upload *uploader.Upload) {
+				success := upload.WaitForCompletion()
+				if !success {
+					log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Error("Large payload upload failed")
+				}
+			}(upload)
+			res.Stdout = []byte{}
+			res.PayloadUrl = upload.Url
 		}
 
 		status := 500
