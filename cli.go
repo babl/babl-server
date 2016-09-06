@@ -37,6 +37,12 @@ func configureCli() (app *cli.App) {
 			Usage:  "Comma separated list of kafka brokers",
 			EnvVar: "BABL_KAFKA_BROKERS",
 		},
+		cli.StringFlag{
+			Name:   "storage",
+			Usage:  "Endpoint for Babl storage",
+			EnvVar: "BABL_STORAGE",
+			Value:  "babl.sh:4443",
+		},
 		cli.BoolFlag{
 			Name:   "debug",
 			Usage:  "Enable debug mode & verbose logging",
@@ -62,9 +68,11 @@ func defaultAction(c *cli.Context) error {
 		cli.ShowAppHelp(c)
 		os.Exit(1)
 	} else {
-		command = c.String("cmd")
 		address := fmt.Sprintf(":%d", c.Int("port"))
-		debug := c.GlobalBool("debug")
+
+		command = c.String("cmd")
+		debug = c.GlobalBool("debug")
+		StorageEndpoint = c.String("storage")
 
 		kb := c.String("kafka-brokers")
 		brokers := []string{}
@@ -72,7 +80,7 @@ func defaultAction(c *cli.Context) error {
 			brokers = strings.Split(kb, ",")
 		}
 
-		run(module, command, address, brokers, debug)
+		run(module, address, brokers)
 	}
 	return nil
 }

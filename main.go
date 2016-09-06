@@ -16,12 +16,12 @@ const (
 
 	MaxKafkaMessageSize = 1024 * 512        // 512kb
 	MaxGrpcMessageSize  = 1024 * 1024 * 100 // 100mb
-	StorageEndpoint     = "babl.sh:4443"
 )
 
 var (
-	debug   bool
-	command string
+	debug           bool   // set by cli.go
+	command         string // set by cli.go
+	StorageEndpoint string // set by cli.go
 )
 
 func main() {
@@ -33,9 +33,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func run(moduleName, cmd, address string, kafkaBrokers []string, dbg bool) {
-	debug = dbg
-	command = cmd
+func run(moduleName, address string, kafkaBrokers []string) {
 	if !bablmodule.CheckModuleName(moduleName) {
 		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
 	}
