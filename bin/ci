@@ -1,31 +1,6 @@
 #!/bin/bash -xe
 
-go version
-
-go test -v ./...
-
-go build
-./babl-server --help >/dev/null
-
-function error_exit
-{
-	echo "$1" 1>&2
-	exit 1
-}
-
-# start babl-server in background
-( ./babl-server --module larskluge/rev --cmd rev; kill 0 ) &
-
-# test grpc interface
-res=$(echo foo | babl -c localhost:4444 larskluge/rev)
-if [ "$res" != "oof" ]; then
-  error_exit "Server did not reverse result as expected (foo), but returned '$res'; aborting."
-fi
-echo $server
-
-# stop babl-server
-trap "exit" INT TERM
-trap "kill 0" EXIT
+bin/test
 
 gox -osarch="linux/amd64" -osarch="darwin/amd64"
 cat babl-server_linux_amd64 | gzip | babl larskluge/s3:babl -e FILE=/babl-server_linux_amd64.gz
