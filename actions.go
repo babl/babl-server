@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,7 +13,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/larskluge/babl-storage/uploader"
+	"github.com/larskluge/babl-storage/download"
+	"github.com/larskluge/babl-storage/upload"
 	pbm "github.com/larskluge/babl/protobuf/messages"
 )
 
@@ -45,7 +45,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		if len(payload) <= 0 && in.PayloadUrl != "" {
 			log.WithFields(log.Fields{"payload_url": in.PayloadUrl}).Info("Downloading external payload")
 			var err error
-			payload, err = getPayload(in.PayloadUrl)
+			payload, err = download.Download(in.PayloadUrl)
 			if err != nil {
 				log.WithError(err).Fatal("Payload download failed")
 			}
@@ -117,19 +117,13 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		}
 
 		if len(res.Stdout) > maxReplySize {
-			upload, err := uploader.New(StorageEndpoint, bytes.NewReader(res.Stdout))
+			up, err := upload.New(StorageEndpoint, bytes.NewReader(res.Stdout))
 			if err != nil {
-				log.WithError(err).Error("uploader.New: store stdout externally failed")
+				log.WithError(err).Fatal("Payload download failed")
 			}
-			log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Info("Store large payload externally")
-			go func(upload *uploader.Upload) {
-				success := upload.WaitForCompletion()
-				if !success {
-					log.WithFields(log.Fields{"blob_id": upload.Id, "blob_url": upload.Url}).Error("Large payload upload failed")
-				}
-			}(upload)
+			go up.WaitForCompletion()
 			res.Stdout = []byte{}
-			res.PayloadUrl = upload.Url
+			res.PayloadUrl = up.Url
 		}
 
 		status := 500
@@ -173,13 +167,4 @@ func Ping(in *pbm.Empty) (*pbm.Pong, error) {
 	log.Info("ping")
 	res := pbm.Pong{Val: "pong"}
 	return &res, nil
-}
-
-func getPayload(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
 }
