@@ -51,6 +51,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			}
 			log.WithFields(log.Fields{"payload_size": len(payload)}).Info("Payload download successful")
 		}
+		stdinBytes := len(payload)
 
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
@@ -82,6 +83,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		// before buffer is full and everything blocks up
 		go func() {
 			stdin.Write(payload)
+			payload = nil
 			stdin.Close()
 		}()
 
@@ -116,6 +118,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			}
 		}
 
+		stdoutBytes := len(res.Stdout)
 		if len(res.Stdout) > maxReplySize {
 			up, err := upload.New(StorageEndpoint, bytes.NewReader(res.Stdout))
 			if err != nil {
@@ -135,8 +138,8 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 
 		fields := log.Fields{
 			"rid":          in.Env["BABL_RID"],
-			"stdin_bytes":  len(payload),
-			"stdout_bytes": len(res.Stdout),
+			"stdin_bytes":  stdinBytes,
+			"stdout_bytes": stdoutBytes,
 			"stderr_bytes": len(res.Stderr),
 			"stderr":       string(res.Stderr),
 			"exitcode":     res.Exitcode,
