@@ -13,6 +13,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/goware/prefixer"
 	"github.com/larskluge/babl-storage/download"
 	"github.com/larskluge/babl-storage/upload"
 	pbm "github.com/larskluge/babl/protobuf/messages"
@@ -67,7 +68,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		}
 
 		var stderrBuf bytes.Buffer
-		stderrCopy := io.TeeReader(stderr, &stderrBuf)
+		stderrCopy := prefixer.New(io.TeeReader(stderr, &stderrBuf), ModuleName+": ")
 
 		go func() {
 			in := bufio.NewScanner(stderrCopy)
