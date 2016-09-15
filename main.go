@@ -22,6 +22,7 @@ var (
 	debug           bool   // set by cli.go
 	command         string // set by cli.go
 	StorageEndpoint string // set by cli.go
+	ModuleName      string // set by cli.go
 )
 
 func main() {
@@ -33,11 +34,11 @@ func main() {
 	app.Run(os.Args)
 }
 
-func run(moduleName, address string, kafkaBrokers []string) {
-	if !bablmodule.CheckModuleName(moduleName) {
-		log.WithFields(log.Fields{"module": moduleName}).Fatal("Module name format incorrect")
+func run(address string, kafkaBrokers []string) {
+	if !bablmodule.CheckModuleName(ModuleName) {
+		log.WithFields(log.Fields{"module": ModuleName}).Fatal("Module name format incorrect")
 	}
-	module := bablmodule.New(moduleName)
+	module := bablmodule.New(ModuleName)
 	module.SetDebug(debug)
 
 	interfaces := "GRPC"
@@ -53,7 +54,7 @@ func run(moduleName, address string, kafkaBrokers []string) {
 			Check(err)
 		}()
 
-		go registerModule(producer, moduleName)
+		go registerModule(producer, ModuleName)
 		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 	}
 

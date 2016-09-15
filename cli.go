@@ -63,8 +63,8 @@ func configureCli() (app *cli.App) {
 }
 
 func defaultAction(c *cli.Context) error {
-	module := c.String("module")
-	if module == "" {
+	ModuleName = c.String("module")
+	if ModuleName == "" {
 		cli.ShowAppHelp(c)
 		os.Exit(1)
 	} else {
@@ -80,7 +80,7 @@ func defaultAction(c *cli.Context) error {
 			brokers = strings.Split(kb, ",")
 		}
 
-		run(module, address, brokers)
+		run(address, brokers)
 	}
 	return nil
 }
