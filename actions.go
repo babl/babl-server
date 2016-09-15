@@ -68,7 +68,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		}
 
 		var stderrBuf bytes.Buffer
-		stderrCopy := prefixer.New(io.TeeReader(stderr, &stderrBuf), ModuleName+": ")
+		stderrCopy := io.TeeReader(prefixer.New(stderr, ModuleName+": "), &stderrBuf)
 
 		go func() {
 			in := bufio.NewScanner(stderrCopy)
