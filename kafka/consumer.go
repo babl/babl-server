@@ -51,11 +51,14 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	Check(err)
 	defer consumer.Close()
 
-	lastOffset, err1 := (*client).GetOffset(topic, partition, sarama.OffsetNewest)
+	offsetNewest, err1 := (*client).GetOffset(topic, partition, sarama.OffsetNewest)
 	Check(err1)
-	offset := lastOffset - lastn
-	if offset < 0 || lastOffset == 0 {
-		offset = 0
+	offsetOldest, err2 := (*client).GetOffset(topic, partition, sarama.OffsetOldest)
+	Check(err2)
+
+	offset := offsetNewest - lastn
+	if offset < 0 || offset < offsetOldest {
+		offset = offsetOldest
 	}
 
 	pc, err2 := consumer.ConsumePartition(topic, partition, offset)
@@ -75,7 +78,7 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
 		ch <- &data
 		<-data.Processed
-		if msg.Offset == lastOffset-1 {
+		if msg.Offset == offsetNewest-1 {
 			close(ch)
 			break
 		}
