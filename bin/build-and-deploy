@@ -3,9 +3,9 @@
 go build
 gox -osarch="linux/amd64" -osarch="darwin/amd64"
 
-cat babl-server_linux_amd64 | gzip | babl larskluge/s3-new:babl -e FILE=/babl-server_linux_amd64.gz
-cat babl-server_darwin_amd64 | gzip | babl larskluge/s3-new:babl -e FILE=/babl-server_darwin_amd64.gz
+cat babl-server_linux_amd64 | gzip | babl larskluge/s3:babl -e FILE=/babl-server_linux_amd64.gz
+cat babl-server_darwin_amd64 | gzip | babl larskluge/s3:babl -e FILE=/babl-server_darwin_amd64.gz
 
-./babl-server -version | babl larskluge/s3-new:babl -e FILE=/babl-server-latest-version.txt -e CONTENTTYPE=text/plain
+./babl-server -version | babl larskluge/s3:babl -e FILE=/babl-server-latest-version.txt -e CONTENTTYPE=text/plain
 
 rm -f babl-server_linux_amd64 babl-server_darwin_amd64
