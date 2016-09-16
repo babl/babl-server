@@ -14,7 +14,7 @@ const (
 	Version  = "0.6.5"
 	clientID = "babl-server"
 
-	MaxKafkaMessageSize = 1024 * 512        // 512kb
+	MaxKafkaMessageSize = 1024 * 100        // 100kb
 	MaxGrpcMessageSize  = 1024 * 1024 * 100 // 100mb
 )
 
