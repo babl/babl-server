@@ -5,6 +5,7 @@ package main
 import (
 	"crypto/tls"
 	"net"
+	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/larskluge/babl/bablmodule"
@@ -40,6 +41,13 @@ func startGrpcServer(address string, module *bablmodule.Module) {
 }
 
 func (s *server) IO(ctx context.Context, in *pbm.BinRequest) (*pbm.BinReply, error) {
+	if _, ok := in.Env["BABL_RID"]; !ok {
+		if len(in.Env) == 0 {
+			in.Env = map[string]string{}
+		}
+		rid := strconv.FormatUint(uint64(random.Uint32()), 10)
+		in.Env["BABL_RID"] = rid
+	}
 	return IO(in, MaxGrpcMessageSize)
 }
 
