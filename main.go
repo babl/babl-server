@@ -1,9 +1,7 @@
 package main
 
 import (
-	"math/rand"
 	"os"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/larskluge/babl-server/kafka"
@@ -25,8 +23,6 @@ var (
 	command         string // set by cli.go
 	StorageEndpoint string // set by cli.go
 	ModuleName      string // set by cli.go
-
-	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func main() {
