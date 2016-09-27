@@ -27,14 +27,18 @@ var (
 
 func main() {
 	bablutils.PrintPlainVersionAndExit(os.Args, Version)
-	log.SetOutput(os.Stderr)
-	log.SetFormatter(&log.JSONFormatter{})
-
 	app := configureCli()
 	app.Run(os.Args)
 }
 
 func run(address string, kafkaBrokers []string) {
+	log.SetOutput(os.Stderr)
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetLevel(log.InfoLevel)
+	if debug {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	if !bablmodule.CheckModuleName(ModuleName) {
 		log.WithFields(log.Fields{"module": ModuleName}).Fatal("Module name format incorrect")
 	}
