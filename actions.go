@@ -70,14 +70,19 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		var stderrBuf bytes.Buffer
 		stderrCopy := io.TeeReader(prefixer.New(stderr, ModuleName+": "), &stderrBuf)
 
+		stderrCopied := make(chan bool, 1)
 		go func() {
 			in := bufio.NewScanner(stderrCopy)
 			for in.Scan() {
-				log.Info(in.Text()) // TODO: forward with correct log level
+				if debug {
+					log.Debug(in.Text())
+				}
 			}
 			if err := in.Err(); err != nil {
 				log.WithError(err).Warn("Copy module exec stderr stream to logs failed")
 			}
+			stderr.Close()
+			stderrCopied <- true
 		}()
 
 		// write to stdin non-blocking so external process can start consuming data
@@ -97,10 +102,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stdout)")
 		}
-		res.Stderr, err = ioutil.ReadAll(&stderrBuf)
-		if err != nil {
-			log.WithError(err).Error("ioutil.ReadAll(stderr)")
-		}
+		stdout.Close()
 
 		if err := cmd.Wait(); err != nil {
 			res.Exitcode = 255
@@ -118,6 +120,10 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 				log.WithError(err).Error("cmd.Wait")
 			}
 		}
+
+		// ensure that go routine has read stderr completely to guarantee stderrBuf is copied in full
+		<-stderrCopied
+		res.Stderr = stderrBuf.Bytes()
 
 		stdoutBytes := len(res.Stdout)
 		if len(res.Stdout) > maxReplySize {
