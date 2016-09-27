@@ -74,9 +74,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		go func() {
 			in := bufio.NewScanner(stderrCopy)
 			for in.Scan() {
-				if debug {
-					log.Debug(in.Text())
-				}
+				log.Debug(in.Text())
 			}
 			if err := in.Err(); err != nil {
 				log.WithError(err).Warn("Copy module exec stderr stream to logs failed")
