@@ -80,7 +80,6 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			if err := in.Err(); err != nil {
 				log.WithError(err).Warn("Copy module exec stderr stream to logs failed")
 			}
-			stderr.Close()
 			stderrCopied <- true
 		}()
 
@@ -101,7 +100,8 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stdout)")
 		}
-		stdout.Close()
+		<-stderrCopied
+		res.Stderr = stderrBuf.Bytes()
 
 		if err := cmd.Wait(); err != nil {
 			res.Exitcode = 255
@@ -119,10 +119,6 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 				log.WithError(err).Error("cmd.Wait")
 			}
 		}
-
-		// ensure that go routine has read stderr completely to guarantee stderrBuf is copied in full
-		<-stderrCopied
-		res.Stderr = stderrBuf.Bytes()
 
 		stdoutBytes := len(res.Stdout)
 		if len(res.Stdout) > maxReplySize {
