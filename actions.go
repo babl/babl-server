@@ -68,6 +68,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		}
 
 		var stderrBuf bytes.Buffer
+		// FIXME: prefixer breaks realtime reading of stderr
 		stderrCopy := io.TeeReader(prefixer.New(stderr, ModuleName+": "), &stderrBuf)
 
 		stderrCopied := make(chan bool, 1)
