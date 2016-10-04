@@ -86,6 +86,48 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	log.Println("Consumer: Done consuming topic", topic)
 }
 
+// ConsumeGetOffsetValues returns topic/partition min/max offset
+func ConsumeGetOffsetValues(client *sarama.Client, topic string, partition int32) (int64, int64) {
+	log.WithFields(log.Fields{"topic": topic, "partition": partition}).Info("GetOffset Values")
+
+	offsetNewest, err1 := (*client).GetOffset(topic, partition, sarama.OffsetNewest)
+	Check(err1)
+	offsetOldest, err2 := (*client).GetOffset(topic, partition, sarama.OffsetOldest)
+	Check(err2)
+
+	return offsetOldest, offsetNewest // from, to
+}
+
+// ConsumeTopicPartitionOffset will consume a specific topic/partition/offset
+func ConsumeTopicPartitionOffset(client *sarama.Client, topic string, partition int32, offset int64) ConsumerData {
+	log.WithFields(log.Fields{"topic": topic, "partition": partition, "offset": offset}).Info("Consuming specific Topic/Partition/Offset")
+
+	consumer, err := sarama.NewConsumerFromClient(*client)
+	Check(err)
+	defer consumer.Close()
+
+	//offsetNewest, err1 := (*client).GetOffset(topic, partition, sarama.OffsetNewest)
+	//Check(err1)
+	//offsetOldest, err2 := (*client).GetOffset(topic, partition, sarama.OffsetOldest)
+	//Check(err2)
+
+	pc, err2 := consumer.ConsumePartition(topic, partition, offset)
+	if err2 != nil && strings.Contains(err2.Error(), "offset is outside the range") {
+		log.WithFields(log.Fields{"topic": topic, "partition": partition, "offset": offset}).Error("Kafka Topic/Partition offset is outside the range")
+		return ConsumerData{} // ERROR
+	}
+	Check(err2)
+	defer pc.Close()
+
+	for msg := range pc.Messages() {
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
+		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
+		return data
+	}
+	log.Println("Consumer: Done consuming topic", topic)
+	return ConsumerData{}
+}
+
 func getOptionOffset(options []ConsumerOptions) int64 {
 	offset := sarama.OffsetNewest
 	if len(options) > 0 {
