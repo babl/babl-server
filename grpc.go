@@ -4,6 +4,7 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"net"
 
 	log "github.com/Sirupsen/logrus"
@@ -15,7 +16,9 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type server struct{}
+type server struct {
+	busy bool
+}
 
 func startGrpcServer(address string, module *bablmodule.Module) {
 	lis, err := net.Listen("tcp", address)
@@ -35,12 +38,18 @@ func startGrpcServer(address string, module *bablmodule.Module) {
 	opts = append(opts, grpc.MaxMsgSize(MaxGrpcMessageSize))
 
 	s := grpc.NewServer(opts...)
-	pb.RegisterBinaryServer((*module).GrpcServiceName(), s, &server{})
+	pb.RegisterBinaryServer((*module).GrpcServiceName(), s, &server{busy: false})
 	s.Serve(lis)
 }
 
 func (s *server) IO(ctx context.Context, in *pbm.BinRequest) (*pbm.BinReply, error) {
-	return IO(in, MaxGrpcMessageSize)
+	if s.busy {
+		return nil, errors.New("Busy calculating, please try again later")
+	} else {
+		s.busy = true
+		defer func() { s.busy = false }()
+		return IO(in, MaxGrpcMessageSize)
+	}
 }
 
 func (s *server) Ping(ctx context.Context, in *pbm.Empty) (*pbm.Pong, error) {
