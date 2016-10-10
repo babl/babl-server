@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/larskluge/babl/bablutils"
 	"github.com/urfave/cli"
@@ -25,6 +26,12 @@ func configureCli() (app *cli.App) {
 			Usage:  "Command to be executed",
 			Value:  "cat",
 			EnvVar: "BABL_COMMAND",
+		},
+		cli.StringFlag{
+			Name:   "cmd-timeout",
+			Usage:  "Max execution duration for command to complete, before its killed",
+			Value:  "30s",
+			EnvVar: "BABL_COMMAND_TIMEOUT",
 		},
 		cli.IntFlag{
 			Name:   "port",
@@ -71,6 +78,10 @@ func defaultAction(c *cli.Context) error {
 		address := fmt.Sprintf(":%d", c.Int("port"))
 
 		command = c.String("cmd")
+		var err error
+		if CommandTimeout, err = time.ParseDuration(c.String("cmd-timeout")); err != nil {
+			panic("cmd-timeout: Command timeout not a valid duration")
+		}
 		debug = c.GlobalBool("debug")
 		StorageEndpoint = c.String("storage")
 

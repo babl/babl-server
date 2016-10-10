@@ -97,8 +97,8 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			log.WithError(err).Error("cmd.Start")
 		}
 
-		timer := time.AfterFunc(5*time.Minute, func() {
-			log.Error("Process calculation timed out, killing process group")
+		timer := time.AfterFunc(CommandTimeout, func() {
+			log.Errorf("Process calculation timed out after %s, killing process group", CommandTimeout)
 			pgid, err := syscall.Getpgid(cmd.Process.Pid)
 			if err == nil {
 				syscall.Kill(-pgid, 15) // note the minus sign

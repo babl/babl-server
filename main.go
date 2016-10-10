@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/larskluge/babl-server/kafka"
@@ -19,10 +20,11 @@ const (
 )
 
 var (
-	debug           bool   // set by cli.go
-	command         string // set by cli.go
-	StorageEndpoint string // set by cli.go
-	ModuleName      string // set by cli.go
+	debug           bool          // set by cli.go
+	command         string        // set by cli.go
+	CommandTimeout  time.Duration // set by cli.go
+	StorageEndpoint string        // set by cli.go
+	ModuleName      string        // set by cli.go
 )
 
 func main() {
