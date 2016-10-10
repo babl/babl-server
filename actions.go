@@ -136,7 +136,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		if len(res.Stdout) > maxReplySize {
 			up, err := upload.New(StorageEndpoint, bytes.NewReader(res.Stdout))
 			if err != nil {
-				log.WithError(err).Fatal("Payload download failed")
+				log.WithError(err).Fatal("Payload upload failed")
 			}
 			go up.WaitForCompletion()
 			res.Stdout = []byte{}
