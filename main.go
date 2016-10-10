@@ -25,6 +25,7 @@ var (
 	CommandTimeout  time.Duration // set by cli.go
 	StorageEndpoint string        // set by cli.go
 	ModuleName      string        // set by cli.go
+	KafkaFlush      bool          // set by cli.go
 )
 
 func main() {

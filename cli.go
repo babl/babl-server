@@ -44,6 +44,11 @@ func configureCli() (app *cli.App) {
 			Usage:  "Comma separated list of kafka brokers",
 			EnvVar: "BABL_KAFKA_BROKERS",
 		},
+		cli.BoolFlag{
+			Name:   "kafka-flush",
+			Usage:  "For debugging only: error all incoming messages from Kafka to flush the topic",
+			EnvVar: "BABL_KAFKA_FLUSH",
+		},
 		cli.StringFlag{
 			Name:   "storage",
 			Usage:  "Endpoint for Babl storage",
@@ -90,6 +95,8 @@ func defaultAction(c *cli.Context) error {
 		if kb != "" {
 			brokers = strings.Split(kb, ",")
 		}
+
+		KafkaFlush = c.Bool("kafka-flush")
 
 		run(address, brokers)
 	}

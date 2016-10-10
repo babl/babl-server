@@ -28,6 +28,12 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
 
+		// Ignore all incoming messages from Kafka to flush the topic
+		if KafkaFlush {
+			data.Processed <- "flush"
+			continue
+		}
+
 		rid := SplitLast(data.Key, ".")
 		async := false
 		res := "error"
