@@ -31,6 +31,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 
 	go func() {
 		cmd := exec.Command(command)
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		env := os.Environ()
 		cmd.Env = []string{} // {"FOO=BAR"}
 
@@ -96,6 +97,15 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			log.WithError(err).Error("cmd.Start")
 		}
 
+		timer := time.AfterFunc(5*time.Minute, func() {
+			log.Error("Process calculation timed out, killing process group")
+			pgid, err := syscall.Getpgid(cmd.Process.Pid)
+			if err == nil {
+				syscall.Kill(-pgid, 15) // note the minus sign
+			}
+			// cmd.Process.Kill()
+		})
+
 		res.Stdout, err = ioutil.ReadAll(stdout)
 		if err != nil {
 			log.WithError(err).Error("ioutil.ReadAll(stdout)")
@@ -119,6 +129,8 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 				log.WithError(err).Error("cmd.Wait")
 			}
 		}
+
+		timer.Stop()
 
 		stdoutBytes := len(res.Stdout)
 		if len(res.Stdout) > maxReplySize {
