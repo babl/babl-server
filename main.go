@@ -28,7 +28,8 @@ var (
 )
 
 func main() {
-	bablutils.GetDesiredVersion(clientID, Version, os.Args)
+	u := bablutils.NewUpgrade(clientID, os.Args)
+	u.Update(Version, os.Getenv("BABL_DESIRED_SERVER_VERSION"))
 	bablutils.PrintPlainVersionAndExit(os.Args, Version)
 	app := configureCli()
 	app.Run(os.Args)
