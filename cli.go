@@ -66,7 +66,7 @@ func configureCli() (app *cli.App) {
 			Name:  "upgrade",
 			Usage: "Upgrades the server to the latest available version",
 			Action: func(_ *cli.Context) {
-				m := bablutils.NewUpgrade("babl-server")
+				m := bablutils.NewUpgrade("babl-server", []string{})
 				m.Upgrade(Version)
 			},
 		},

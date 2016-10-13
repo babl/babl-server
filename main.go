@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version  = "0.6.13"
+	Version  = "0.6.14"
 	clientID = "babl-server"
 
 	MaxKafkaMessageSize = 1024 * 100        // 100kb
@@ -29,6 +29,8 @@ var (
 )
 
 func main() {
+	u := bablutils.NewUpgrade(clientID, os.Args)
+	u.Update(Version, os.Getenv("BABL_DESIRED_SERVER_VERSION"))
 	bablutils.PrintPlainVersionAndExit(os.Args, Version)
 	app := configureCli()
 	app.Run(os.Args)
