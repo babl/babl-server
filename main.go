@@ -1,13 +1,14 @@
 package main
 
 import (
+	"os"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/larskluge/babl-server/kafka"
 	. "github.com/larskluge/babl-server/utils"
 	"github.com/larskluge/babl/bablmodule"
 	"github.com/larskluge/babl/bablutils"
-	"os"
-	"time"
 )
 
 const (
