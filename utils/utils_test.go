@@ -11,3 +11,24 @@ func TestSplitLastSimple(t *testing.T) {
 		t.Fatalf("expected 'baz', but result was '%s'", res)
 	}
 }
+
+func TestSplitLastSimpleMissing(t *testing.T) {
+	res := SplitLast("foo bar baz", ".")
+	if strings.Compare(res, "") != 0 {
+		t.Fatalf("expected '', but result was '%s'", res)
+	}
+}
+
+func TestSplitFirstSimple(t *testing.T) {
+	res := SplitFirst("foo.bar.baz", ".")
+	if strings.Compare(res, "foo") != 0 {
+		t.Fatalf("expected 'foo', but result was '%s'", res)
+	}
+}
+
+func TestSplitFirstSimpleMissing(t *testing.T) {
+	res := SplitFirst("foo bar baz", ".")
+	if strings.Compare(res, "") != 0 {
+		t.Fatalf("expected '', but result was '%s'", res)
+	}
+}
