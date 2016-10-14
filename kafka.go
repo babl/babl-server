@@ -30,6 +30,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 
 		// Ignore all incoming messages from Kafka to flush the topic
 		if KafkaFlush {
+			log.Warn("Topic Flush in process; ignoring this message")
 			data.Processed <- "flush"
 			continue
 		}
