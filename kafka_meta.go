@@ -15,7 +15,7 @@ func listenToMetadata(client *sarama.Client) {
 	ch := make(chan *kafka.ConsumerData)
 	go kafka.Consume(client, topic, ch) // TODO read last 1,000 messages and place in cache upon start
 	for msg := range ch {
-		log.WithFields(log.Fields{"key": msg.Key}).Debug("Response received from module exec")
+		log.WithFields(log.Fields{"key": msg.Key}).Debug("Metadata received")
 
 		var meta pb.Meta
 		if err := proto.Unmarshal(msg.Value, &meta); err != nil {

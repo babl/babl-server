@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,7 +36,9 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			continue
 		}
 
-		rid := SplitLast(data.Key, ".")
+		ridStr := SplitLast(data.Key, ".")
+		rid, err := strconv.ParseUint(ridStr, 10, 64)
+		Check(err)
 		async := false
 		res := "error"
 		var msg []byte
@@ -50,11 +53,24 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			if len(in.Env) == 0 {
 				in.Env = map[string]string{}
 			}
-			in.Env["BABL_RID"] = rid
-			out, err := IO(in, MaxKafkaMessageSize)
-			Check(err)
-			if out.Exitcode == 0 {
-				res = "success"
+			in.Env["BABL_RID"] = ridStr
+
+			var out *pbm.BinReply
+			if !IsRequestCancelled(rid) {
+				var err error
+				out, err = IO(in, MaxKafkaMessageSize)
+				Check(err)
+				if out.Exitcode == 0 {
+					res = "success"
+				}
+			} else {
+				out = &pbm.BinReply{
+					Id:       rid,
+					Module:   ModuleName,
+					Exitcode: -7,
+					Stderr:   []byte("Request cancelled; this job is ignored"),
+				}
+				res = "cancel"
 			}
 			msg, err = proto.Marshal(out)
 			Check(err)
