@@ -8,12 +8,10 @@ import (
 	"github.com/muesli/cache2go"
 )
 
-var (
-	CancelledRequestsCache = cache2go.Cache("cancelled-requests")
-)
+var CancelledRequestsCache = cache2go.Cache("cancelled-requests")
 
-func IsRequestCancelled(rid uint64) {
-	CancelledRequestsCache.Exists(rid)
+func IsRequestCancelled(rid uint64) bool {
+	return CancelledRequestsCache.Exists(rid)
 }
 
 func handleCancelRequest(req *pb.CancelRequest) {
