@@ -86,6 +86,33 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	log.Println("Consumer: Done consuming topic", topic)
 }
 
+func ConsumeIncludingLastN(client *sarama.Client, topic string, partition int32, n int64, ch chan *ConsumerData) {
+	consumer, err := sarama.NewConsumerFromClient(*client)
+	Check(err)
+	defer consumer.Close()
+
+	offsetNewest, err := (*client).GetOffset(topic, partition, sarama.OffsetNewest)
+	Check(err)
+	offsetOldest, err := (*client).GetOffset(topic, partition, sarama.OffsetOldest)
+	Check(err)
+
+	offset := offsetNewest - n
+	if offset < 0 || offset < offsetOldest {
+		offset = offsetOldest
+	}
+
+	pc, err := consumer.ConsumePartition(topic, partition, offset)
+	Check(err)
+	defer pc.Close()
+
+	for msg := range pc.Messages() {
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
+		ch <- &data
+		<-data.Processed
+	}
+	close(ch)
+}
+
 // ConsumeGetOffsetValues returns topic/partition min/max offset
 func ConsumeGetOffsetValues(client *sarama.Client, topic string, partition int32) (int64, int64) {
 	log.WithFields(log.Fields{"topic": topic, "partition": partition}).Info("GetOffset Values")

@@ -12,7 +12,7 @@ import (
 func listenToMetadata(client *sarama.Client) {
 	topic := bn.ModuleToTopic(ModuleName, true)
 	ch := make(chan *kafka.ConsumerData)
-	go kafka.Consume(client, topic, ch) // TODO read last 1,000 messages and place in cache upon start
+	go kafka.ConsumeIncludingLastN(client, topic, 0, 100, ch)
 	for msg := range ch {
 		var meta pb.Meta
 		if err := proto.Unmarshal(msg.Value, &meta); err != nil {
