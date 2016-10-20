@@ -27,7 +27,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		log.WithFields(log.Fields{"topics": topics}).Debug("Work")
 
 		data, _ := <-ch
-		log.WithFields(log.Fields{"key": data.Key}).Debug("Request recieved in module's topic/group")
+		log.WithFields(log.Fields{"key": data.Key}).Debug("Request received in module's topic/group")
 
 		// Ignore all incoming messages from Kafka to flush the topic
 		if KafkaFlush {
