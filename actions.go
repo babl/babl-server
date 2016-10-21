@@ -19,12 +19,14 @@ import (
 	pbm "github.com/larskluge/babl/protobuf/messages"
 )
 
-func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
+func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 	start := time.Now()
-	res := pbm.BinReply{Exitcode: 0}
+	res := pbm.BinReply{Id: req.Id, Module: req.Module, Exitcode: 0}
+
+	l := log.WithFields(log.Fields{"rid": req.Id})
 
 	done := make(chan bool, 1)
-	_, async := in.Env["BABL_ASYNC"]
+	_, async := req.Env["BABL_ASYNC"]
 	if async {
 		done <- true
 	}
@@ -36,36 +38,39 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		cmd.Env = []string{} // {"FOO=BAR"}
 
 		vars := []string{}
-		for k, v := range in.Env {
+		for k, v := range req.Env {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 			vars = append(vars, k)
 		}
 		cmd.Env = append(cmd.Env, env...)
 		cmd.Env = append(cmd.Env, "BABL_VARS="+strings.Join(vars, ","))
 
-		payload := in.Stdin
-		if len(payload) <= 0 && in.PayloadUrl != "" {
-			log.WithFields(log.Fields{"payload_url": in.PayloadUrl}).Info("Downloading external payload")
+		payload := req.Stdin
+		if len(payload) <= 0 && req.PayloadUrl != "" {
+			start := time.Now()
+			l.WithFields(log.Fields{"payload_url": req.PayloadUrl}).Info("Downloading external payload")
 			var err error
-			payload, err = download.Download(in.PayloadUrl)
+			payload, err = download.Download(req.PayloadUrl)
+			elapsed := float64(time.Since(start).Seconds() * 1000)
+			l := l.WithFields(log.Fields{"duration_ms": elapsed})
 			if err != nil {
-				log.WithError(err).Fatal("Payload download failed")
+				l.WithError(err).Fatal("Payload download failed")
 			}
-			log.WithFields(log.Fields{"payload_size": len(payload)}).Info("Payload download successful")
+			l.WithFields(log.Fields{"payload_size": len(payload)}).Info("Payload download successful")
 		}
 		stdinBytes := len(payload)
 
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
-			log.WithError(err).Error("cmd.StdinPipe")
+			l.WithError(err).Error("cmd.StdinPipe")
 		}
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
-			log.WithError(err).Error("cmd.StdoutPipe")
+			l.WithError(err).Error("cmd.StdoutPipe")
 		}
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
-			log.WithError(err).Error("cmd.StderrPipe")
+			l.WithError(err).Error("cmd.StderrPipe")
 		}
 
 		var stderrBuf bytes.Buffer
@@ -74,12 +79,12 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 
 		stderrCopied := make(chan bool, 1)
 		go func() {
-			in := bufio.NewScanner(stderrCopy)
-			for in.Scan() {
-				log.Debug(in.Text())
+			req := bufio.NewScanner(stderrCopy)
+			for req.Scan() {
+				l.Debug(req.Text())
 			}
-			if err := in.Err(); err != nil {
-				log.WithError(err).Warn("Copy module exec stderr stream to logs failed")
+			if err := req.Err(); err != nil {
+				l.WithError(err).Warn("Copy module exec stderr stream to logs failed")
 			}
 			stderrCopied <- true
 		}()
@@ -94,11 +99,11 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 
 		err = cmd.Start()
 		if err != nil {
-			log.WithError(err).Error("cmd.Start")
+			l.WithError(err).Error("cmd.Start")
 		}
 
 		timer := time.AfterFunc(CommandTimeout, func() {
-			log.Errorf("Process calculation timed out after %s, killing process group", CommandTimeout)
+			l.Errorf("Process calculation timed out after %s, killing process group", CommandTimeout)
 			pgid, err := syscall.Getpgid(cmd.Process.Pid)
 			if err == nil {
 				syscall.Kill(-pgid, 15) // note the minus sign
@@ -108,7 +113,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 
 		res.Stdout, err = ioutil.ReadAll(stdout)
 		if err != nil {
-			log.WithError(err).Error("ioutil.ReadAll(stdout)")
+			l.WithError(err).Error("ioutil.ReadAll(stdout)")
 		}
 		<-stderrCopied
 		res.Stderr = stderrBuf.Bytes()
@@ -126,7 +131,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 					res.Exitcode = int32(status.ExitStatus())
 				}
 			} else {
-				log.WithError(err).Error("cmd.Wait")
+				l.WithError(err).Error("cmd.Wait")
 			}
 		}
 
@@ -136,7 +141,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		if len(res.Stdout) > maxReplySize {
 			up, err := upload.New(StorageEndpoint, bytes.NewReader(res.Stdout))
 			if err != nil {
-				log.WithError(err).Fatal("Payload upload failed")
+				l.WithError(err).Fatal("Payload upload failed")
 			}
 			go up.WaitForCompletion()
 			res.Stdout = []byte{}
@@ -151,7 +156,6 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		elapsed := float64(time.Since(start).Seconds() * 1000)
 
 		fields := log.Fields{
-			"rid":          in.Env["BABL_RID"],
 			"stdin_bytes":  stdinBytes,
 			"stdout_bytes": stdoutBytes,
 			"stderr_bytes": len(res.Stderr),
@@ -165,7 +169,7 @@ func IO(in *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		} else {
 			fields["mode"] = "sync"
 		}
-		l := log.WithFields(fields)
+		l = l.WithFields(fields)
 		if status == 200 {
 			l.Info("call")
 		} else {
