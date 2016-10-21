@@ -139,11 +139,17 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 
 		stdoutBytes := len(res.Stdout)
 		if len(res.Stdout) > maxReplySize {
+			start := time.Now()
 			up, err := upload.New(StorageEndpoint, bytes.NewReader(res.Stdout))
+			l := l.WithFields(log.Fields{"blob_url": up.Url})
 			if err != nil {
 				l.WithError(err).Fatal("Payload upload failed")
 			}
-			go up.WaitForCompletion()
+			go func() {
+				up.WaitForCompletion()
+				elapsed := float64(time.Since(start).Seconds() * 1000)
+				l.WithFields(log.Fields{"duration_ms": elapsed}).Warn("Payload upload done")
+			}()
 			res.Stdout = []byte{}
 			res.PayloadUrl = up.Url
 		}
