@@ -29,16 +29,19 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		data, _ := <-ch
 		log.WithFields(log.Fields{"key": data.Key}).Debug("Request received in module's topic/group")
 
+		ridStr := SplitLast(data.Key, ".")
+		rid, err := strconv.ParseUint(ridStr, 10, 64)
+		Check(err)
+
+		l := log.WithFields(log.Fields{"rid": rid})
+
 		// Ignore all incoming messages from Kafka to flush the topic
 		if KafkaFlush {
-			log.Warn("Topic Flush in process; ignoring this message")
+			l.Warn("Topic Flush in process; ignoring this message")
 			data.Processed <- "flush"
 			continue
 		}
 
-		ridStr := SplitLast(data.Key, ".")
-		rid, err := strconv.ParseUint(ridStr, 10, 64)
-		Check(err)
 		async := false
 		res := "error"
 		var msg []byte
@@ -64,11 +67,13 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 					res = "success"
 				}
 			} else {
+				str := "Request cancelled; this job is ignored"
+				l.Warn(str)
 				out = &pbm.BinReply{
 					Id:       rid,
 					Module:   ModuleName,
 					Exitcode: -7,
-					Stderr:   []byte("Request cancelled; this job is ignored"),
+					Stderr:   []byte(str),
 				}
 				res = "cancel"
 			}
