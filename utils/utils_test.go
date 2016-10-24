@@ -1,34 +1,21 @@
 package utils
 
 import (
-	"strings"
-	"testing"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func TestSplitLastSimple(t *testing.T) {
-	res := SplitLast("foo.bar.baz", ".")
-	if strings.Compare(res, "baz") != 0 {
-		t.Fatalf("expected 'baz', but result was '%s'", res)
-	}
-}
-
-func TestSplitLastSimpleMissing(t *testing.T) {
-	res := SplitLast("foo bar baz", ".")
-	if strings.Compare(res, "foo bar baz") != 0 {
-		t.Fatalf("expected 'foo', but result was '%s'", res)
-	}
-}
-
-func TestSplitFirstSimple(t *testing.T) {
-	res := SplitFirst("foo.bar.baz", ".")
-	if strings.Compare(res, "foo") != 0 {
-		t.Fatalf("expected 'foo', but result was '%s'", res)
-	}
-}
-
-func TestSplitFirstSimpleMissing(t *testing.T) {
-	res := SplitFirst("foo bar baz", ".")
-	if strings.Compare(res, "foo bar baz") != 0 {
-		t.Fatalf("expected 'foo bar baz', but result was '%s'", res)
-	}
-}
+var _ = Describe("Testing with Ginkgo", func() {
+	It("split last simple", func() {
+		Expect(SplitLast("foo.bar.baz", ".")).To(Equal("baz"))
+	})
+	It("split last simple missing", func() {
+		Expect(SplitLast("foo bar baz", ".")).To(Equal("foo bar baz"))
+	})
+	It("split first simple", func() {
+		Expect(SplitFirst("foo.bar.baz", ".")).To(Equal("foo"))
+	})
+	It("split first simple missing", func() {
+		Expect(SplitFirst("foo bar baz", ".")).To(Equal("foo bar baz"))
+	})
+})
