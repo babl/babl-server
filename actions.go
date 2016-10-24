@@ -14,6 +14,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/goware/prefixer"
+	. "github.com/larskluge/babl-server/utils"
 	"github.com/larskluge/babl-storage/download"
 	"github.com/larskluge/babl-storage/upload"
 	pbm "github.com/larskluge/babl/protobuf/messages"
@@ -23,7 +24,7 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 	start := time.Now()
 	res := pbm.BinReply{Id: req.Id, Module: req.Module, Exitcode: 0}
 
-	l := log.WithFields(log.Fields{"rid": req.Id})
+	l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
 
 	done := make(chan bool, 1)
 	_, async := req.Env["BABL_ASYNC"]

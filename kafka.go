@@ -30,7 +30,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		err := proto.Unmarshal(data.Value, req)
 		Check(err)
 
-		l := log.WithFields(log.Fields{"rid": req.Id})
+		l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
 
 		async := false
 		status := "error"

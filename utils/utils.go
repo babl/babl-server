@@ -1,6 +1,9 @@
 package utils
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 func SplitFirst(s, sep string) string {
 	n := strings.Index(s, sep)
@@ -19,4 +22,12 @@ func Check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func FmtRid(rid uint64) string {
+	return strconv.FormatUint(rid, 32)
+}
+
+func ParseRid(s string) (uint64, error) {
+	return strconv.ParseUint(s, 32, 64)
 }

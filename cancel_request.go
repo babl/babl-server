@@ -4,6 +4,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	. "github.com/larskluge/babl-server/utils"
 	pb "github.com/larskluge/babl/protobuf/messages"
 	"github.com/muesli/cache2go"
 )
@@ -15,7 +16,7 @@ func IsRequestCancelled(rid uint64) bool {
 }
 
 func handleCancelRequest(req *pb.CancelRequest) {
-	log.WithFields(log.Fields{"rid": req.RequestId}).Info("Cancel request received")
+	log.WithFields(log.Fields{"rid": FmtRid(req.RequestId)}).Info("Cancel request received")
 
 	CancelledRequestsCache.Add(req.RequestId, 15*time.Minute, true)
 }
