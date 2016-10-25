@@ -1,0 +1,35 @@
+package: github.com/larskluge/babl-server
+import:
+- package: github.com/Shopify/sarama
+  version: 4ba9bba6adb6697bcec3841e1ecdfecf5227c3b9
+- package: github.com/Sirupsen/logrus
+- package: github.com/golang/protobuf
+  version: 98fa357170587e470c5f27d3c3ea0947b71eb455
+  subpackages:
+  - proto
+- package: github.com/goware/prefixer
+- package: github.com/larskluge/babl-storage
+  subpackages:
+  - download
+  - upload
+- package: github.com/larskluge/babl
+  subpackages:
+  - bablmodule
+  - bablnaming
+  - bablutils
+  - protobuf
+  - protobuf/messages
+- package: github.com/muesli/cache2go
+- package: github.com/urfave/cli
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: google.golang.org/grpc
+  version: c2c110d5cf950aef5e2af86b2f5d0a53400ff90b
+  subpackages:
+  - credentials
+- package: gopkg.in/bsm/sarama-cluster.v2
+  version: 0cd44ad78b92bd308d568dad5611b995fdf556d3
+testImport:
+- package: github.com/onsi/ginkgo
+- package: github.com/onsi/gomega

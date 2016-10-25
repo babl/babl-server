@@ -1,0 +1,108 @@
+hash: cb2c96f0155bde4b00f0416c9175be981a88fde7fa5a06a99e7e8f4af3acab82
+updated: 2016-10-25T14:59:37.166048966+02:00
+imports:
+- name: github.com/eapache/go-resiliency
+  version: b86b1ec0dd4209a588dc1285cdd471e73525c0b3
+  subpackages:
+  - breaker
+- name: github.com/eapache/queue
+  version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
+- name: github.com/golang/protobuf
+  version: 98fa357170587e470c5f27d3c3ea0947b71eb455
+  subpackages:
+  - proto
+- name: github.com/golang/snappy
+  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+- name: github.com/goware/prefixer
+  version: 395022866408d928fc2439f7eac73dd8d370ec1d
+- name: github.com/kardianos/osext
+  version: c2c54e542fb797ad986b31721e1baedf214ca413
+- name: github.com/klauspost/crc32
+  version: cb6bfca970f6908083f26f39a79009d608efd5cd
+- name: github.com/larskluge/babl
+  version: 8679880f56e95ad8e07d303c4c9a04277eb98725
+  subpackages:
+  - bablmodule
+  - bablnaming
+  - bablutils
+  - protobuf
+  - protobuf/messages
+- name: github.com/larskluge/babl-storage
+  version: 9f11afbeaf8e6f421e4039588214735d27b0bd0a
+  subpackages:
+  - download
+  - protobuf
+  - upload
+- name: github.com/mattn/go-isatty
+  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/muesli/cache2go
+  version: 85b4c0beff6963ea48e14ab79ec8bced31a5efd4
+- name: github.com/Shopify/sarama
+  version: 4ba9bba6adb6697bcec3841e1ecdfecf5227c3b9
+- name: github.com/Sirupsen/logrus
+  version: 3ec0642a7fb6488f65b06f9040adc67e3990296a
+- name: github.com/urfave/cli
+  version: 6f2647a880e25bd7178ab4bbf1f4045ac256cc57
+- name: golang.org/x/net
+  version: 65dfc08770ce66f74becfdff5f8ab01caef4e946
+  subpackages:
+  - context
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/sys
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  subpackages:
+  - unix
+- name: google.golang.org/grpc
+  version: c2c110d5cf950aef5e2af86b2f5d0a53400ff90b
+  subpackages:
+  - codes
+  - credentials
+  - grpclog
+  - internal
+  - metadata
+  - naming
+  - peer
+  - transport
+- name: gopkg.in/bsm/sarama-cluster.v2
+  version: 0cd44ad78b92bd308d568dad5611b995fdf556d3
+- name: gopkg.in/yaml.v2
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+testImports:
+- name: github.com/onsi/ginkgo
+  version: a8ccd817611666211fdf6e6a752174a0db8374a8
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
+  - types
+- name: github.com/onsi/gomega
+  version: e46a88d81f5164c47e2d51c1c3d863dde7997993
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/oraclematcher
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types
