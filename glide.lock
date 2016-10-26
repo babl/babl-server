@@ -1,10 +1,16 @@
-hash: cb2c96f0155bde4b00f0416c9175be981a88fde7fa5a06a99e7e8f4af3acab82
-updated: 2016-10-25T14:59:37.166048966+02:00
+hash: ed3b412b04d75726519e8b53b6bf84dd7ee2979a01f400a6a9f8391b5b3e09f9
+updated: 2016-10-26T18:23:04.463262202+02:00
 imports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
 - name: github.com/eapache/go-resiliency
   version: b86b1ec0dd4209a588dc1285cdd471e73525c0b3
   subpackages:
   - breaker
+- name: github.com/eapache/go-xerial-snappy
+  version: bb955e01b9346ac19dc29eb16586c90ded99a98c
 - name: github.com/eapache/queue
   version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
 - name: github.com/golang/protobuf
@@ -38,7 +44,7 @@ imports:
 - name: github.com/muesli/cache2go
   version: 85b4c0beff6963ea48e14ab79ec8bced31a5efd4
 - name: github.com/Shopify/sarama
-  version: 4ba9bba6adb6697bcec3841e1ecdfecf5227c3b9
+  version: bd61cae2be85fa6ff40eb23dcdd24567967ac2ae
 - name: github.com/Sirupsen/logrus
   version: 3ec0642a7fb6488f65b06f9040adc67e3990296a
 - name: github.com/urfave/cli
@@ -69,7 +75,7 @@ imports:
   - peer
   - transport
 - name: gopkg.in/bsm/sarama-cluster.v2
-  version: 0cd44ad78b92bd308d568dad5611b995fdf556d3
+  version: 117d3bb910d11344786e57f50ec3a03b15cca54d
 - name: gopkg.in/yaml.v2
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports:

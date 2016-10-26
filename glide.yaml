@@ -1,7 +1,7 @@
 package: github.com/larskluge/babl-server
 import:
 - package: github.com/Shopify/sarama
-  version: 4ba9bba6adb6697bcec3841e1ecdfecf5227c3b9
+  version: bd61cae2be85fa6ff40eb23dcdd24567967ac2ae
 - package: github.com/Sirupsen/logrus
 - package: github.com/golang/protobuf
   version: 98fa357170587e470c5f27d3c3ea0947b71eb455
@@ -29,7 +29,7 @@ import:
   subpackages:
   - credentials
 - package: gopkg.in/bsm/sarama-cluster.v2
-  version: 0cd44ad78b92bd308d568dad5611b995fdf556d3
+  version: 117d3bb910d11344786e57f50ec3a03b15cca54d
 testImport:
 - package: github.com/onsi/ginkgo
 - package: github.com/onsi/gomega
