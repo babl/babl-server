@@ -149,7 +149,7 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			go func() {
 				up.WaitForCompletion()
 				elapsed := float64(time.Since(start).Seconds() * 1000)
-				l.WithFields(log.Fields{"duration_ms": elapsed}).Warn("Payload upload done")
+				l.WithFields(log.Fields{"duration_ms": elapsed}).Info("Payload upload done")
 			}()
 			res.Stdout = []byte{}
 			res.PayloadUrl = up.Url
