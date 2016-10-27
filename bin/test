@@ -2,7 +2,8 @@
 
 go version
 
-go test -v ./...
+# exclude vendor directory when testing recursive
+go test $(go list ./... | grep -v /vendor/)
 
 go build
 ./babl-server --help >/dev/null
