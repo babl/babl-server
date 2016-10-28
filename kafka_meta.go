@@ -9,10 +9,12 @@ import (
 	pb "github.com/larskluge/babl/protobuf/messages"
 )
 
+const ReadLastNMetadataEntries = 1000
+
 func listenToMetadata(client *sarama.Client) {
 	topic := bn.ModuleToTopic(ModuleName, true)
 	ch := make(chan *kafka.ConsumerData)
-	go kafka.ConsumeIncludingLastN(client, topic, 0, 100, ch)
+	go kafka.ConsumeIncludingLastN(client, topic, 0, ReadLastNMetadataEntries, ch)
 	for msg := range ch {
 		var meta pb.Meta
 		if err := proto.Unmarshal(msg.Value, &meta); err != nil {
