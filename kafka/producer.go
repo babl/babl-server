@@ -26,12 +26,9 @@ func SendMessage(producer *sarama.SyncProducer, key, topic string, value *[]byte
 		msg.Key = sarama.StringEncoder(key)
 	}
 	rid := SplitLast(key, ".")
-	var partition int32
-	var offset int64
-	var err error
 
 	start := time.Now()
-	_, _, err = (*producer).SendMessage(msg)
+	partition, offset, err := (*producer).SendMessage(msg)
 	Check(err)
 	elapsed := float64(time.Since(start).Seconds() * 1000)
 	log.WithFields(log.Fields{"topic": topic, "key": key, "partition": partition, "offset": offset, "duration_ms": elapsed, "rid": rid}).Info("Producer: message sent")
