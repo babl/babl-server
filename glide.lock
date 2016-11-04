@@ -34,7 +34,7 @@ imports:
   - protobuf
   - protobuf/messages
 - name: github.com/larskluge/babl-storage
-  version: 9f11afbeaf8e6f421e4039588214735d27b0bd0a
+  version: 2b85252497b2b24e40b52e3399af5d1327b494a6
   subpackages:
   - download
   - protobuf
