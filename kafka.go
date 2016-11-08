@@ -30,8 +30,6 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		err := proto.Unmarshal(data.Value, req)
 		Check(err)
 
-		l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
-
 		async := false
 		status := "error"
 		res := &pbm.BinReply{Id: req.Id, Module: req.Module}
@@ -41,17 +39,17 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		if len(req.Env) == 0 {
 			req.Env = map[string]string{}
 		}
-
+		l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
 		// Ignore all incoming messages from Kafka to flush the topic
 		if KafkaFlush {
 			str := "Topic Flush in process; ignoring this message"
-			l.Warn(str)
+			l.WithFields(log.Fields{"code": "req-flushed"}).Warn(str)
 			res.Exitcode = -6
 			res.Stderr = []byte(str)
 			status = "flush"
 		} else if IsRequestCancelled(req.Id) {
 			str := "Request cancelled; this job is ignored"
-			l.Warn(str)
+			l.WithFields(log.Fields{"code": "req-execution-canceled"}).Warn(str)
 			res.Exitcode = -7
 			res.Stderr = []byte(str)
 			status = "cancel"
@@ -73,6 +71,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			skey := data.Key[n+1:]
 			stopic := "supervisor." + host
 			kafka.SendMessage(producer, skey, stopic, &msg)
+			l.WithFields(log.Fields{"code": "reply-enqueued"}).Info("Module replied")
 		}
 
 		data.Processed <- status
