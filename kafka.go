@@ -46,7 +46,6 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			l.WithFields(log.Fields{"code": "req-flushed"}).Warn(str)
 			res.Exitcode = -6
 			res.Stderr = []byte(str)
-			res.Status = pbm.BinReply_EXECUTION_FLUSHED
 			status = "flush"
 		} else if IsRequestCancelled(req.Id) {
 			str := "Request cancelled; this job is ignored"
