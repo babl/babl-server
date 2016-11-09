@@ -24,11 +24,11 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 
 	for {
 		data, _ := <-ch
-		log.WithFields(log.Fields{"key": data.Key}).Debug("Request received in module's topic/group")
-
 		req := &pbm.BinRequest{}
 		err := proto.Unmarshal(data.Value, req)
 		Check(err)
+		l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
+		l.WithFields(log.Fields{"key": data.Key, "code": "req-started"}).Info("Request received in module's topic/group")
 
 		async := false
 		status := "error"
@@ -39,19 +39,21 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 		if len(req.Env) == 0 {
 			req.Env = map[string]string{}
 		}
-		l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
+
 		// Ignore all incoming messages from Kafka to flush the topic
 		if KafkaFlush {
 			str := "Topic Flush in process; ignoring this message"
 			l.WithFields(log.Fields{"code": "req-flushed"}).Warn(str)
 			res.Exitcode = -6
 			res.Stderr = []byte(str)
+			res.Status = pbm.BinReply_EXECUTION_FLUSHED
 			status = "flush"
 		} else if IsRequestCancelled(req.Id) {
 			str := "Request cancelled; this job is ignored"
 			l.WithFields(log.Fields{"code": "req-execution-canceled"}).Warn(str)
 			res.Exitcode = -7
 			res.Stderr = []byte(str)
+			res.Status = pbm.BinReply_EXECUTION_CANCELED
 			status = "cancel"
 		} else {
 			// Processing message
@@ -59,6 +61,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			res, err = IO(req, MaxKafkaMessageSize)
 			Check(err)
 			if res.Exitcode == 0 {
+				res.Status = pbm.BinReply_SUCCESS
 				status = "success"
 			}
 		}

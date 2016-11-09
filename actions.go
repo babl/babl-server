@@ -100,9 +100,9 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		}
 
 		timer := time.AfterFunc(CommandTimeout, func() {
-			res.Status = pbm.BinReply_CMD_TIMEOUT
+			res.Status = pbm.BinReply_EXECUTION_TIMEOUT
 			res.Error = fmt.Sprintf("Process calculation timed out after %s, killing process group", CommandTimeout)
-			l.Errorf(res.Error)
+			l.Error(res.Error)
 			pgid, err := syscall.Getpgid(cmd.Process.Pid)
 			if err == nil {
 				syscall.Kill(-pgid, 15) // note the minus sign
@@ -156,11 +156,9 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 		status := 500
 		if res.Exitcode == 0 {
 			status = 200
-			res.Status = pbm.BinReply_SUCCESS
 		} else {
-			if res.Status != pbm.BinReply_CMD_TIMEOUT {
-				res.Status = pbm.BinReply_CMD_ERROR
-				res.Error = "Error while executing"
+			if res.Status != pbm.BinReply_EXECUTION_TIMEOUT {
+				res.Status = pbm.BinReply_ERROR
 			}
 		}
 
