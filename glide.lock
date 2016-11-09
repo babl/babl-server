@@ -1,5 +1,5 @@
-hash: ed3b412b04d75726519e8b53b6bf84dd7ee2979a01f400a6a9f8391b5b3e09f9
-updated: 2016-10-26T18:23:04.463262202+02:00
+hash: d8aa74d8230c7df592bfa381eea8becdaf6d964f331faaeec0c4ca043d2907c5
+updated: 2016-11-09T19:08:33.600016212+01:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
@@ -26,7 +26,7 @@ imports:
 - name: github.com/klauspost/crc32
   version: cb6bfca970f6908083f26f39a79009d608efd5cd
 - name: github.com/larskluge/babl
-  version: 8679880f56e95ad8e07d303c4c9a04277eb98725
+  version: 027fb2472b8cf7ce6e67bc1389d9ee5483b18c7d
   subpackages:
   - bablmodule
   - bablnaming
@@ -34,7 +34,7 @@ imports:
   - protobuf
   - protobuf/messages
 - name: github.com/larskluge/babl-storage
-  version: 9f11afbeaf8e6f421e4039588214735d27b0bd0a
+  version: 2b85252497b2b24e40b52e3399af5d1327b494a6
   subpackages:
   - download
   - protobuf
