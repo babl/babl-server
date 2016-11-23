@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -23,6 +24,12 @@ import (
 func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 	start := time.Now()
 	res := pbm.BinReply{Id: req.Id, Module: req.Module, Exitcode: 0}
+
+	// measure mem alloc
+	var m runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&m)
+	startAlloc := m.Alloc
 
 	l := log.WithFields(log.Fields{"rid": FmtRid(req.Id)})
 
@@ -64,6 +71,7 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			l.WithError(err).Error("cmd.StdinPipe")
 		}
 		stdout, err := cmd.StdoutPipe()
+		defer stdout.Close()
 		if err != nil {
 			l.WithError(err).Error("cmd.StdoutPipe")
 		}
@@ -192,6 +200,14 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 	case <-time.After(CommandTimeout + 15*time.Second):
 		l.Fatal("Something went terribly wrong")
 	}
+
+	res.Stdout = []byte{}
+
+	runtime.GC()
+	runtime.ReadMemStats(&m)
+	allocDiff := m.Alloc - startAlloc
+	log.WithFields(log.Fields{"# goroutines": runtime.NumGoroutine(), "alloc total": m.Alloc, "alloc diff": allocDiff}).Warn("Stats..")
+
 	return &res, nil
 }
 
