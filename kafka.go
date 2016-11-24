@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"time"
 
@@ -40,8 +41,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			req.Env = map[string]string{}
 		}
 
-		// Ignore all incoming messages from Kafka to flush the topic
-		if KafkaFlush {
+		if KafkaFlush { // Ignore all incoming messages from Kafka to flush the topic
 			str := "Topic Flush in process; ignoring this message"
 			l.WithFields(log.Fields{"code": "req-flushed"}).Warn(str)
 			res.Exitcode = -6
@@ -75,7 +75,10 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			kafka.SendMessage(producer, skey, stopic, &msg)
 			l.WithFields(log.Fields{"code": "reply-enqueued"}).Info("Module replied")
 		}
-
+		if ShouldRestart() {
+			log.WithFields(log.Fields{"code": "req-restart", "module": ModuleName}).Warn("Instance will restart now!")
+			os.Exit(0)
+		}
 		data.Processed <- status
 	}
 }
