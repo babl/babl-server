@@ -57,9 +57,6 @@ func run(address string, kafkaBrokers []string) {
 		client := kafka.NewClient(kafkaBrokers, clientID, debug)
 		defer (*client).Close()
 
-		clientRestart := kafka.NewClient(kafkaBrokers, clientID+".restart", debug)
-		defer (*clientRestart).Close()
-
 		clientgroup := kafka.NewClientGroup(kafkaBrokers, clientID, debug)
 		defer (*clientgroup).Close()
 
@@ -73,7 +70,6 @@ func run(address string, kafkaBrokers []string) {
 		go registerModule(producer, ModuleName)
 		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 		go listenToMetadata(client)
-		go listenToRestart(clientRestart)
 	}
 
 	log.WithFields(log.Fields{"version": Version, "interfaces": interfaces, "debug": debug}).Warn("Start module")
