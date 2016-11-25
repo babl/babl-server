@@ -13,7 +13,7 @@ import:
   - download
   - upload
 - package: github.com/larskluge/babl
-  version: 027fb2472b8cf7ce6e67bc1389d9ee5483b18c7d
+  version: af127a14728a7987d9f42eedcaeff4ae5e4e1e5b
   subpackages:
   - bablmodule
   - bablnaming

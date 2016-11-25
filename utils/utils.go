@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"os"
 	"strconv"
 	"strings"
 )
@@ -30,4 +31,10 @@ func FmtRid(rid uint64) string {
 
 func ParseRid(s string) (uint64, error) {
 	return strconv.ParseUint(s, 32, 64)
+}
+
+func Hostname() string {
+	h, err := os.Hostname()
+	Check(err)
+	return h
 }

@@ -153,9 +153,8 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			res.PayloadUrl = up.Url
 		}
 
-		status := 500
 		if res.Exitcode == 0 {
-			status = 200
+			res.Status = pbm.BinReply_SUCCESS
 		} else {
 			if res.Status != pbm.BinReply_EXECUTION_TIMEOUT {
 				res.Status = pbm.BinReply_ERROR
@@ -169,7 +168,7 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			"stderr_bytes": len(res.Stderr),
 			"stderr":       string(res.Stderr),
 			"exitcode":     res.Exitcode,
-			"status":       status,
+			"status":       res.Status.String(),
 			"duration_ms":  elapsed,
 			"code":         "req-executed",
 		}
@@ -179,7 +178,7 @@ func IO(req *pbm.BinRequest, maxReplySize int) (*pbm.BinReply, error) {
 			fields["mode"] = "sync"
 		}
 		l = l.WithFields(fields)
-		if status == 200 {
+		if res.Status == pbm.BinReply_SUCCESS {
 			l.Info("call")
 		} else {
 			l.Error("call")

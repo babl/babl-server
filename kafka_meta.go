@@ -32,5 +32,24 @@ func listenToMetadata(client *sarama.Client) {
 		}
 		msg.Processed <- "success"
 	}
-	log.Panic("listenToMetadata: Lost connection to Kafka")
+	log.Panic("listenToMetadada: Lost connection to Kafka")
+}
+
+//hack because we cant have history on the restart queue! another queue? another client?
+func listenToRestart(client *sarama.Client) {
+	topic := bn.ModuleToTopic(ModuleName, true)
+	ch := make(chan *kafka.ConsumerData)
+	go kafka.Consume(client, topic, ch)
+	for msg := range ch {
+		var meta pb.Meta
+		if err := proto.Unmarshal(msg.Value, &meta); err != nil {
+			log.WithError(err).Warn("Unknown meta data received")
+		} else {
+			if meta.Restart != nil {
+				handleRestartRequest(meta.Restart)
+			}
+		}
+		msg.Processed <- "success"
+	}
+	log.Panic("listenToMetadada: Lost connection to Kafka")
 }
