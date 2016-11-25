@@ -26,6 +26,9 @@ func listenToMetadata(client *sarama.Client) {
 			if meta.Cancel != nil {
 				handleCancelRequest(meta.Cancel)
 			}
+			if meta.Restart != nil && !meta.Historical {
+				handleRestartRequest(meta.Restart)
+			}
 		}
 		msg.Processed <- "success"
 	}
