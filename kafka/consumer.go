@@ -10,10 +10,11 @@ import (
 
 // ConsumerData struct used by Consume() and ConsumeGroup()
 type ConsumerData struct {
-	Topic     string
-	Key       string
-	Value     []byte
-	Processed chan string
+	Topic      string
+	Key        string
+	Value      []byte
+	Processed  chan string
+	Historical bool
 }
 
 type ConsumerOptions struct {
@@ -106,7 +107,8 @@ func ConsumeIncludingLastN(client *sarama.Client, topic string, partition int32,
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
+		historical := msg.Offset < offsetNewest
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1), Historical: historical}
 		ch <- &data
 		<-data.Processed
 	}
