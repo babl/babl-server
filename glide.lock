@@ -1,8 +1,8 @@
-hash: d8aa74d8230c7df592bfa381eea8becdaf6d964f331faaeec0c4ca043d2907c5
-updated: 2016-11-09T19:08:33.600016212+01:00
+hash: 54d671df6fca14e1d50e28d779a1838284c2adbbdab9d3c13d4884263e6ef63d
+updated: 2016-12-05T14:43:20.081183961+01:00
 imports:
 - name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/eapache/go-resiliency
@@ -26,7 +26,7 @@ imports:
 - name: github.com/klauspost/crc32
   version: cb6bfca970f6908083f26f39a79009d608efd5cd
 - name: github.com/larskluge/babl
-  version: 027fb2472b8cf7ce6e67bc1389d9ee5483b18c7d
+  version: af127a14728a7987d9f42eedcaeff4ae5e4e1e5b
   subpackages:
   - bablmodule
   - bablnaming
@@ -34,23 +34,23 @@ imports:
   - protobuf
   - protobuf/messages
 - name: github.com/larskluge/babl-storage
-  version: 2b85252497b2b24e40b52e3399af5d1327b494a6
+  version: 13ad5d47f70a8edda4196c7a95c2d3303bbcb1c1
   subpackages:
   - download
   - protobuf
   - upload
 - name: github.com/mattn/go-isatty
-  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+  version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/muesli/cache2go
   version: 85b4c0beff6963ea48e14ab79ec8bced31a5efd4
 - name: github.com/Shopify/sarama
   version: bd61cae2be85fa6ff40eb23dcdd24567967ac2ae
 - name: github.com/Sirupsen/logrus
-  version: 3ec0642a7fb6488f65b06f9040adc67e3990296a
+  version: 881bee4e20a5d11a6a88a5667c6f292072ac1963
 - name: github.com/urfave/cli
-  version: 6f2647a880e25bd7178ab4bbf1f4045ac256cc57
+  version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
 - name: golang.org/x/net
-  version: 65dfc08770ce66f74becfdff5f8ab01caef4e946
+  version: 6cdc0daab091c43fc46193327e0047b4f883c613
   subpackages:
   - context
   - http2
@@ -60,7 +60,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  version: f5a6bd43051d3f1f5dd3e0dbd531721aa5e75d28
   subpackages:
   - unix
 - name: google.golang.org/grpc
@@ -80,7 +80,7 @@ imports:
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports:
 - name: github.com/onsi/ginkgo
-  version: a8ccd817611666211fdf6e6a752174a0db8374a8
+  version: 00054c0bb96fc880d4e0be1b90937fad438c5290
   subpackages:
   - config
   - internal/codelocation
@@ -99,7 +99,7 @@ testImports:
   - reporters/stenographer/support/go-isatty
   - types
 - name: github.com/onsi/gomega
-  version: e46a88d81f5164c47e2d51c1c3d863dde7997993
+  version: f1f0f388b31eca4e2cbe7a6dd8a3a1dfddda5b1c
   subpackages:
   - format
   - internal/assertion
