@@ -23,6 +23,7 @@ var (
 	debug           bool          // set by cli.go
 	command         string        // set by cli.go
 	CommandTimeout  time.Duration // set by cli.go
+	RestartTimeout  time.Duration // set by cli.go
 	StorageEndpoint string        // set by cli.go
 	ModuleName      string        // set by cli.go
 	KafkaFlush      bool          // set by cli.go
@@ -70,6 +71,7 @@ func run(address string, kafkaBrokers []string) {
 		go registerModule(producer, ModuleName)
 		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 		go listenToMetadata(client)
+		go scheduleRestart(producer)
 	}
 
 	log.WithFields(log.Fields{"version": Version, "interfaces": interfaces, "debug": debug}).Warn("Start module")
