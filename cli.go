@@ -33,6 +33,12 @@ func configureCli() (app *cli.App) {
 			Value:  "30s",
 			EnvVar: "BABL_COMMAND_TIMEOUT",
 		},
+		cli.StringFlag{
+			Name:   "restart-timeout",
+			Usage:  "Timeout after each we gracefully restart babl-server (defaults to none)",
+			EnvVar: "BABL_RESTART_TIMEOUT",
+			Value:  "0s",
+		},
 		cli.IntFlag{
 			Name:   "port",
 			Usage:  "Port for server to be started on",
@@ -87,6 +93,11 @@ func defaultAction(c *cli.Context) error {
 		if CommandTimeout, err = time.ParseDuration(c.String("cmd-timeout")); err != nil {
 			panic("cmd-timeout: Command timeout not a valid duration")
 		}
+
+		if RestartTimeout, err = time.ParseDuration(c.String("restart-timeout")); err != nil {
+			panic("restart-timeout: Restart timeout not a valid duration")
+		}
+
 		debug = c.GlobalBool("debug")
 		StorageEndpoint = c.String("storage")
 
