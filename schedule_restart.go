@@ -13,7 +13,7 @@ import (
 )
 
 func scheduleRestart(producer *sarama.SyncProducer) {
-
+	log.WithFields(log.Fields{"module": ModuleName, "hostname": Hostname(), "interval": RestartTimeout.String()}).Info("Scheduled Restart Interval Set")
 	dr := pb.RestartRequest{InstanceId: Hostname()}
 	req := pb.Meta{
 		Restart: &dr,

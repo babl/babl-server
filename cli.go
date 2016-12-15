@@ -35,9 +35,9 @@ func configureCli() (app *cli.App) {
 		},
 		cli.StringFlag{
 			Name:   "restart-timeout",
-			Usage:  "Timeout after each we gracefully restart babl-server (defaults to 24h)",
-			Value:  "24h",
+			Usage:  "Timeout after each we gracefully restart babl-server (defaults to none)",
 			EnvVar: "BABL_RESTART_TIMEOUT",
+			Value:  "0s",
 		},
 		cli.IntFlag{
 			Name:   "port",

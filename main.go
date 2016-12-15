@@ -71,7 +71,9 @@ func run(address string, kafkaBrokers []string) {
 		go registerModule(producer, ModuleName)
 		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
 		go listenToMetadata(client)
-		go scheduleRestart(producer)
+		if NullRestartTimeout, _ := time.ParseDuration("0s"); RestartTimeout != NullRestartTimeout {
+			go scheduleRestart(producer)
+		}
 	}
 
 	log.WithFields(log.Fields{"version": Version, "interfaces": interfaces, "debug": debug}).Warn("Start module")
