@@ -34,7 +34,7 @@ func Consume(client *sarama.Client, topic string, ch chan *ConsumerData, options
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string)}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
 		ch <- &data
 		<-data.Processed
@@ -64,7 +64,7 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 
 	pc, err2 := consumer.ConsumePartition(topic, partition, offset)
 	if err2 != nil && strings.Contains(err2.Error(), "offset is outside the range") {
-		data := ConsumerData{Key: string(""), Value: []byte(""), Processed: make(chan string, 1)}
+		data := ConsumerData{Key: string(""), Value: []byte(""), Processed: make(chan string)}
 		log.WithFields(log.Fields{"topic": topic, "partition": 0, "offset": offset, "key": "", "value size": 0}).Error("Kafka Topic/Partition offset is outside the range")
 		ch <- &data
 		<-data.Processed
@@ -75,7 +75,7 @@ func ConsumeLastN(client *sarama.Client, topic string, partition int32, lastn in
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string)}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
 		ch <- &data
 		<-data.Processed
@@ -108,7 +108,7 @@ func ConsumeIncludingLastN(client *sarama.Client, topic string, partition int32,
 
 	for msg := range pc.Messages() {
 		historical := msg.Offset < offsetNewest
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1), Historical: historical}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string), Historical: historical}
 		ch <- &data
 		<-data.Processed
 	}
@@ -149,7 +149,7 @@ func ConsumeTopicPartitionOffset(client *sarama.Client, topic string, partition 
 	defer pc.Close()
 
 	for msg := range pc.Messages() {
-		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string, 1)}
+		data := ConsumerData{Key: string(msg.Key), Value: msg.Value, Processed: make(chan string)}
 		log.WithFields(log.Fields{"topic": topic, "partition": msg.Partition, "offset": msg.Offset, "key": data.Key, "value size": len(data.Value), "rid": data.Key}).Info("New Message Received")
 		return data
 	}
