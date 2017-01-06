@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
@@ -18,7 +19,12 @@ func ShouldRestart() bool {
 }
 
 func GracefulRestart() {
-	Restart = true
+	if !Processing {
+		os.Exit(0)
+	} else {
+		Restart = true
+	}
+
 }
 
 func handleRestartRequest(req *pb.RestartRequest) {
