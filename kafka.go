@@ -25,6 +25,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 
 	for {
 		data, _ := <-ch
+		Processing = true
 		req := &pbm.BinRequest{}
 		err := proto.Unmarshal(data.Value, req)
 		Check(err)
@@ -79,6 +80,7 @@ func startWorker(clientgroup *cluster.Client, producer *sarama.SyncProducer, top
 			log.WithFields(log.Fields{"code": "req-restart", "module": ModuleName}).Warn("Instance will restart now!")
 			os.Exit(0)
 		}
+		Processing = false
 		data.Processed <- status
 	}
 }
