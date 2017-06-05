@@ -70,7 +70,7 @@ func run(address string, kafkaBrokers []string) {
 		}()
 
 		go registerModule(producer, ModuleName)
-		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO"), module.KafkaTopicName("Ping")})
+		go startWorker(clientgroup, producer, []string{module.KafkaTopicName("IO")})
 		go listenToMetadata(client)
 	}
 
